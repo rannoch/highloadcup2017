@@ -4,10 +4,13 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/buaazp/fasthttprouter"
 	"fmt"
+	"github.com/rannoch/highloadcup2017/storage"
 )
 
 func main() {
-	load_data("data")
+	storage.Init()
+
+	LoadData("data")
 
 	router := fasthttprouter.New()
 	//router.POST("/:entity/new", entityNewHandler)
