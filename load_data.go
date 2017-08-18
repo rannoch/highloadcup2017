@@ -24,7 +24,7 @@ func LoadData(path string) (err error) {
 				log.Println(err.Error())
 			}
 		}*/
-		err = storage.InsertEntityMultiple(entities)
+		err = storage.Db.InsertEntityMultiple(entities)
 		if err != nil {
 			log.Println(err.Error())
 		}
@@ -33,7 +33,7 @@ func LoadData(path string) (err error) {
 	return
 }
 
-func parseFile(file string) (entities []models.Entity) {
+func parseFile(file string) (entities []storage.Entity) {
 	var err error
 
 	fileContent, err := ioutil.ReadFile(file)
@@ -53,7 +53,7 @@ func parseFile(file string) (entities []models.Entity) {
 			return
 		}
 		for _, v := range m["users"] {
-			entities = append(entities, v)
+			entities = append(entities, &v)
 		}
 
 	case strings.Contains(file, "locations"):
@@ -66,7 +66,7 @@ func parseFile(file string) (entities []models.Entity) {
 		}
 
 		for _, v := range m["locations"] {
-			entities = append(entities, v)
+			entities = append(entities, &v)
 		}
 	case strings.Contains(file, "visits"):
 		var m = make(map[string][]models.Visit)
@@ -78,7 +78,7 @@ func parseFile(file string) (entities []models.Entity) {
 		}
 
 		for _, v := range m["visits"] {
-			entities = append(entities, v)
+			entities = append(entities, &v)
 		}
 	}
 

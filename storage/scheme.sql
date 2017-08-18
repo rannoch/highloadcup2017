@@ -1,3 +1,5 @@
+drop database if exists hlcup2017;
+
 create database hlcup2017 CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 use hlcup2017;

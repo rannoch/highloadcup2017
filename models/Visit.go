@@ -1,25 +1,29 @@
 package models
 
 type Visit struct {
-	Id int32
-	Location int32
-	User int32
-	Visited_at BaskaTime
-	Mark int32
+	Id int32 `json:"id"`
+	Location int32 `json:"location"`
+	User int32 `json:"user"`
+	Visited_at BaskaTime `json:"visited_at"`
+	Mark int32 `json:"mark"`
 }
 
-func (visit Visit) TableName() string {
+func (visit *Visit) TableName() string {
 	return "visit"
 }
 
-func (visit Visit) GetId() int32 {
+func (visit *Visit) GetId() int32 {
 	return visit.Id
 }
 
-func (Visit Visit) GetFields() []string{
+func (visit *Visit) GetFields() []string{
 	return []string{"id", "location", "user", "visited_at", "mark"}
 }
 
-func (Visit Visit) GetValues() []interface{} {
-	return []interface{}{Visit.Id, Visit.Location, Visit.User, Visit.Visited_at, Visit.Mark}
+func (visit *Visit) GetValues() []interface{} {
+	return []interface{}{visit.Id, visit.Location, visit.User, visit.Visited_at, visit.Mark}
+}
+
+func (visit *Visit) GetFieldPointers() []interface{} {
+	return []interface{}{&visit.Id, &visit.Location, &visit.User, &visit.Visited_at, &visit.Mark}
 }
