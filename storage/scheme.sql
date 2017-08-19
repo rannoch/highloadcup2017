@@ -10,7 +10,7 @@ create table user (
   first_name varchar(50),
   last_name varchar(50),
   gender varchar(1),
-  birth_date date
+  birth_date int
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
@@ -26,7 +26,7 @@ create table visit (
 	id int primary key,
   location int,
   user int,
-  visited_at datetime,
+  visited_at int,
   mark tinyint(1)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8;

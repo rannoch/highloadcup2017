@@ -53,7 +53,8 @@ func parseFile(file string) (entities []storage.Entity) {
 			return
 		}
 		for _, v := range m["users"] {
-			entities = append(entities, &v)
+			c := v
+			entities = append(entities, &c)
 		}
 
 	case strings.Contains(file, "locations"):
@@ -66,7 +67,8 @@ func parseFile(file string) (entities []storage.Entity) {
 		}
 
 		for _, v := range m["locations"] {
-			entities = append(entities, &v)
+			c := v
+			entities = append(entities, &c)
 		}
 	case strings.Contains(file, "visits"):
 		var m = make(map[string][]models.Visit)
@@ -78,7 +80,8 @@ func parseFile(file string) (entities []storage.Entity) {
 		}
 
 		for _, v := range m["visits"] {
-			entities = append(entities, &v)
+			c := v
+			entities = append(entities, &c)
 		}
 	}
 

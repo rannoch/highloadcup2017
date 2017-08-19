@@ -22,7 +22,7 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 	id, err := strconv.Atoi(ctx.UserValue("id").(string))
 
 	if err != nil {
-		ctx.Error("", fasthttp.StatusNotFound)
+		ctx.Error("", fasthttp.StatusBadRequest)
 		log.Printf("id parse error %v \n", ctx.UserValue("id"))
 		return
 	}
@@ -30,7 +30,7 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 	entityValue, ok := ctx.UserValue("entity").(string)
 
 	if !ok {
-		ctx.Error("Unsupported path", fasthttp.StatusNotFound)
+		ctx.Error("", fasthttp.StatusBadRequest)
 		return
 	}
 
@@ -45,24 +45,24 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 	ctx.UserValue("entity")
 
 	idCondition := storage.Condition{
-		Param:    "id",
-		Value:    strconv.Itoa(id),
-		Operator: "=",
-		Join:     "and",
+		Param:         "id",
+		Value:         strconv.Itoa(id),
+		Operator:      "=",
+		JoinCondition: "and",
 	}
 	conditions = append(conditions, idCondition)
 
 	err = storage.Db.SelectEntity(entity, conditions)
 
 	if err == sql.ErrNoRows {
-		ctx.Error("Unsupported path", fasthttp.StatusNotFound)
+		ctx.Error("", fasthttp.StatusNotFound)
 		return
 	}
 
 	response, err := json.Marshal(entity)
 	if err != nil {
 		log.Println(err)
-		ctx.Error("Unsupported path", fasthttp.StatusNotFound)
+		ctx.Error("", fasthttp.StatusNotFound)
 		return
 	}
 

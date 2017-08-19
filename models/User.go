@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"database/sql/driver"
 	"strconv"
+	"fmt"
+	"github.com/rannoch/highloadcup2017/util"
+	"reflect"
+	"strings"
 )
 
 type User struct {
@@ -13,7 +17,7 @@ type User struct {
 	First_name string `json:"first_name"`
 	Last_name  string `json:"last_name"`
 	Gender     string `json:"gender"`
-	Birth_date BaskaTime `json:"birth_date"`
+	Birth_date int32 `json:"birth_date"`
 }
 
 func (user *User) TableName() string{
@@ -24,8 +28,48 @@ func (user *User) GetId() int32 {
 	return user.Id
 }
 
-func (user *User) GetFields() []string{
+func (user *User) GetFields(alias string) []string{
 	return []string{"id", "email", "first_name", "last_name", "gender", "birth_date"}
+}
+
+func (user *User) ValidateParams(params map[string]interface{}, scenario string) (result bool) {
+	if scenario == "insert" && len(params) != len(user.GetFields("")) {
+		return false
+	}
+
+	for param, _ := range params {
+		if scenario == "update" && param == "id" {
+			return false
+		}
+
+		if !util.StringInSlice(param, user.GetFields("")) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (user *User) SetParams(params map[string]interface{}) {
+	userValue := reflect.ValueOf(user).Elem()
+
+	for param, value := range params {
+		field := userValue.FieldByName(strings.Title(param))
+
+		switch field.Interface().(type){
+		case int32:
+			switch value.(type) {
+			case int32:
+				field.Set(reflect.ValueOf(value.(int32)))
+			case float32:
+				field.Set(reflect.ValueOf(int32(value.(float32))))
+			case float64:
+				field.Set(reflect.ValueOf(int32(value.(float64))))
+			}
+		case string:
+			field.SetString(value.(string))
+		}
+	}
 }
 
 func (user *User) GetValues() []interface{} {
@@ -76,4 +120,10 @@ func (baskaTime *BaskaTime) Scan(value interface{}) error {
 
 func (baskaTime BaskaTime) Value() (driver.Value, error) {
 	return baskaTime.Time, nil
+}
+
+type FloatPrecision5 float32
+
+func (f FloatPrecision5) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf("%.5f", f)), nil
 }

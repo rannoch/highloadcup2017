@@ -4,20 +4,30 @@ type IStorage interface {
 	InsertEntity(entity Entity) error
 	InsertEntityMultiple(entities []Entity) error
 	SelectEntity(entity Entity, conditions []Condition) error
-	SelectEntityMultiple(entities interface{}, conditions []Condition) error
+	SelectEntityMultiple(entities interface{}, fields []string, joins []Join, conditions []Condition) error
+	GetAverage(entity Entity, avgColumn string, tableJoins []Join, conditions []Condition) (average float32, err error)
+	UpdateEntity(entity Entity, params map[string]interface{}, conditions []Condition) (err error)
 }
 
 type Entity interface {
 	GetId() int32
 	TableName() string
-	GetFields() []string
+	GetFields(alias string) []string
 	GetValues() []interface{}
 	GetFieldPointers() []interface{}
+	ValidateParams(params map[string]interface{}, scenario string) (result bool)
+	SetParams(params map[string]interface{})
 }
 
 type Condition struct {
-	Param string
-	Value string
-	Operator string
-	Join  string
+	Param         string
+	Value         string
+	Operator      string
+	JoinCondition string
+}
+
+type Join struct {
+	Name      string
+	Type      string
+	Condition Condition
 }
