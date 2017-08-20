@@ -7,11 +7,13 @@ import (
 )
 
 type Visit struct {
-	Id         int32 `json:"id"`
-	Location   int32 `json:"location"`
-	User       int32 `json:"user"`
-	Visited_at int32 `json:"visited_at"`
-	Mark       int32 `json:"mark"`
+	Id            int32 `json:"id"`
+	Location      int32 `json:"location"`
+	User          int32 `json:"user"`
+	Visited_at    int32 `json:"visited_at"`
+	Mark          int32 `json:"mark"`
+	LocationChild *Location `json:"-"`
+	UserChild     *User `json:"-"`
 }
 
 func (visit *Visit) TableName() string {
@@ -35,7 +37,11 @@ func (visit *Visit) ValidateParams(params map[string]interface{}, scenario strin
 		return false
 	}
 
-	for param, _ := range params {
+	for param, value := range params {
+		if value == nil {
+			return false
+		}
+
 		if scenario == "update" && param == "id" {
 			return false
 		}
@@ -52,8 +58,20 @@ func (visit *Visit) GetValues() []interface{} {
 	return []interface{}{visit.Id, visit.Location, visit.User, visit.Visited_at, visit.Mark}
 }
 
-func (visit *Visit) GetFieldPointers() []interface{} {
-	return []interface{}{&visit.Id, &visit.Location, &visit.User, &visit.Visited_at, &visit.Mark}
+func (visit *Visit) GetFieldPointers(with []string) []interface{} {
+	fieldPointers := []interface{}{&visit.Id, &visit.Location, &visit.User, &visit.Visited_at, &visit.Mark}
+
+	for _, v := range with {
+		if v == "location" {
+			if visit.LocationChild == nil {
+				visit.LocationChild = &Location{}
+			}
+
+			fieldPointers = append(fieldPointers, visit.LocationChild.GetFieldPointers([]string{})...)
+		}
+	}
+
+	return fieldPointers
 }
 
 func (visit *Visit) SetParams(params map[string]interface{}) {
@@ -62,7 +80,7 @@ func (visit *Visit) SetParams(params map[string]interface{}) {
 	for param, value := range params {
 		field := visitValue.FieldByName(strings.Title(param))
 
-		switch field.Interface().(type){
+		switch field.Interface().(type) {
 		case int32:
 			switch value.(type) {
 			case int32:

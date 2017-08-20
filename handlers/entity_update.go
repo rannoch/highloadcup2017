@@ -4,10 +4,10 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/rannoch/highloadcup2017/storage"
 	"strconv"
-	"log"
 	"strings"
 	"github.com/rannoch/highloadcup2017/models"
 	"encoding/json"
+	"database/sql"
 )
 
 func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
@@ -28,7 +28,6 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 
 	if err != nil {
 		ctx.Error("", fasthttp.StatusBadRequest)
-		log.Printf("id parse error %v \n", ctx.UserValue("id"))
 		return
 	}
 
@@ -52,7 +51,6 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 	err = json.Unmarshal(ctx.PostBody(), &params)
 
 	if err != nil {
-		log.Println(err.Error())
 		ctx.Error("", fasthttp.StatusBadRequest)
 		return
 	}
@@ -70,10 +68,16 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 	}
 	conditions = append(conditions, idCondition)
 
-	err = storage.Db.UpdateEntity(entity, params, conditions)
+	err = storage.Db.SelectEntity(entity, conditions)
+
+	if err == sql.ErrNoRows {
+		ctx.Error("", fasthttp.StatusNotFound)
+		return
+	}
+
+	_, err = storage.Db.UpdateEntity(entity, params, conditions)
 
 	if err != nil {
-		log.Println(err.Error())
 		ctx.Error("", fasthttp.StatusBadRequest)
 		return
 	}
@@ -108,7 +112,6 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
 	err := json.Unmarshal(ctx.PostBody(), &params)
 
 	if err != nil {
-		log.Println(err.Error())
 		ctx.Error("", fasthttp.StatusBadRequest)
 		return
 	}
@@ -123,7 +126,6 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
 	err = storage.Db.InsertEntity(entity)
 
 	if err != nil {
-		log.Println(err.Error())
 		ctx.Error("", fasthttp.StatusBadRequest)
 		return
 	}

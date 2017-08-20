@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/valyala/fasthttp"
 	"strconv"
-	"log"
 	"github.com/rannoch/highloadcup2017/storage"
 	"database/sql"
 	"encoding/json"
@@ -14,20 +13,46 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
 	var id int
-	var fromDate = ctx.QueryArgs().GetUintOrZero("fromDate")
-	var toDate = ctx.QueryArgs().GetUintOrZero("toDate")
-	var country = (string)(ctx.QueryArgs().Peek("country"))
-	var toDistance = ctx.QueryArgs().GetUintOrZero("toDistance")
+	var fromDate, toDate, toDistance int
+	var err error
 
-	var visits []models.Visit
+	if ctx.QueryArgs().Has("fromDate") {
+		fromDate, err = ctx.QueryArgs().GetUint("fromDate")
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+	}
+
+	if ctx.QueryArgs().Has("toDate") {
+		toDate, err = ctx.QueryArgs().GetUint("toDate")
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+	}
+
+	if ctx.QueryArgs().Has("toDistance") {
+		toDistance, err = ctx.QueryArgs().GetUint("toDistance")
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+	}
+
+	var country = (string)(ctx.QueryArgs().Peek("country"))
+
+	var visits []models.Visit = []models.Visit{}
 	var conditions []storage.Condition
 	var joins []storage.Join
 
-	id, err := strconv.Atoi(ctx.UserValue("id").(string))
+	id, err = strconv.Atoi(ctx.UserValue("id").(string))
 
 	if err != nil {
 		ctx.Error("", fasthttp.StatusNotFound)
-		log.Printf("id parse error %v \n", ctx.UserValue("id"))
 		return
 	}
 
@@ -38,6 +63,21 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 		JoinCondition: "and",
 	}
 	conditions = append(conditions, idCondition)
+
+	user := models.User{}
+	err = storage.Db.SelectEntity(&user, []storage.Condition{
+		{
+			Param:         "id",
+			Value:         strconv.Itoa(id),
+			Operator:      "=",
+			JoinCondition: "and",
+		},
+	})
+
+	if err == sql.ErrNoRows {
+		ctx.Error("", fasthttp.StatusNotFound)
+		return
+	}
 
 	if fromDate > 0 {
 		conditions = append(conditions, storage.Condition{
@@ -57,22 +97,20 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 		})
 	}
 
-	if toDistance > 0 || len(country) > 0 {
-		joins = append(joins, storage.Join{
-			Name: "location",
-			Type: "left",
-			Condition: storage.Condition{
-				Param:    "visit.location",
-				Value:    "location.id",
-				Operator: "=",
-			},
-		})
-	}
+	joins = append(joins, storage.Join{
+		Name: "location",
+		Type: "left",
+		Condition: storage.Condition{
+			Param:    "visit.location",
+			Value:    "location.id",
+			Operator: "=",
+		},
+	})
 
 	if len(country) > 0 {
 		conditions = append(conditions, storage.Condition{
 			Param:         "country",
-			Value:         "'" +country + "'",
+			Value:         "'" + country + "'",
 			Operator:      "=",
 			JoinCondition: "and",
 		})
@@ -87,16 +125,27 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 		})
 	}
 
-	err = storage.Db.SelectEntityMultiple(&visits, (&models.Visit{}).GetFields("visit"), joins, conditions)
+	err = storage.Db.SelectEntityMultiple(&visits, []string{}, joins, conditions, storage.Sort{Fields:[]string{"visited_at"}, Direction:"asc"})
 
 	if err == sql.ErrNoRows {
 		ctx.Error("Unsupported path", fasthttp.StatusNotFound)
 		return
 	}
 
-	response, err := json.Marshal(visits)
+	visitsResponse := []interface{}{}
+
+	for _, visit := range visits {
+		v := map[string]interface{}{
+			"mark":       visit.Mark,
+			"visited_at": visit.Visited_at,
+			"place":      visit.LocationChild.Place,
+		}
+
+		visitsResponse = append(visitsResponse, v)
+	}
+
+	response, err := json.Marshal(map[string]interface{}{"visits": visitsResponse})
 	if err != nil {
-		log.Println(err)
 		ctx.Error("Unsupported path", fasthttp.StatusNotFound)
 		return
 	}

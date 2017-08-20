@@ -32,6 +32,8 @@ func Init() {
 		log.Fatal(err)
 	}
 
+	mysqlDb.SetMaxOpenConns(200)
+
 	Db = mysqlDb
 }
 
@@ -62,50 +64,47 @@ func (db mysqlDb) InsertEntity(entity Entity) (err error) {
 
 	_, err = stmtIns.Exec(entity.GetValues()...)
 
-	log.Printf("%v", entity.GetValues())
-
 	return
 }
 
 func (db mysqlDb) InsertEntityMultiple(entities []Entity) (err error) {
+	if len(entities) < 1 {
+		return
+	}
+
 	var tableName string
 	var query string
-	var questionMarks string
-	var values = []interface{}{}
+	var valuesString string
 
 	tableName = entities[0].TableName()
 
-	for i := 0; i < len(entities[0].GetValues()); i ++ {
-		if i == len(entities[0].GetValues())-1 {
-			questionMarks += "?"
-			continue
+	for _, entity := range entities {
+		s := ""
+
+		for _, entityFieldValue := range entity.GetValues() {
+			switch entityFieldValue.(type) {
+			case string:
+				s += fmt.Sprintf("'%s',", entityFieldValue)
+			default:
+				s += fmt.Sprintf("%v,", entityFieldValue)
+			}
 		}
 
-		questionMarks += "?,"
+		s = strings.TrimSuffix(s, ",")
+
+		valuesString += "(" + s + "),"
 	}
 
-	query = fmt.Sprintf("insert into %s values", tableName)
+	valuesString = strings.TrimSuffix(valuesString, ",")
 
-	for _, entity := range entities {
-		query += "(" + questionMarks + "),"
-		values = append(values, entity.GetValues()...)
-	}
+	query = fmt.Sprintf("insert into %s values %s", tableName, valuesString)
 
-	query = strings.TrimSuffix(query, ",")
-
-	stmtIns, err := db.Prepare(query)
-
-	if err != nil {
-		return
-	}
-	defer stmtIns.Close()
-
-	_, err = stmtIns.Exec(values...)
+	_, err = db.Exec(query)
 
 	return
 }
 
-func (db mysqlDb) UpdateEntity(entity Entity, params map[string]interface{}, conditions []Condition) (err error) {
+func (db mysqlDb) UpdateEntity(entity Entity, params map[string]interface{}, conditions []Condition) (rowsAffected int64, err error) {
 	if len(params) < 1 {
 		return
 	}
@@ -151,9 +150,9 @@ func (db mysqlDb) UpdateEntity(entity Entity, params map[string]interface{}, con
 	}
 	defer stmtIns.Close()
 
-	_, err = stmtIns.Exec(values...)
+	result, err := stmtIns.Exec(values...)
 
-	return
+	return result.RowsAffected()
 }
 
 func (db mysqlDb) SelectEntity(entity Entity, conditions []Condition) (err error) {
@@ -175,16 +174,18 @@ func (db mysqlDb) SelectEntity(entity Entity, conditions []Condition) (err error
 
 	query = fmt.Sprintf("select * from %s %s limit 1", entity.TableName(), conditionString)
 
-	err = db.QueryRow(query).Scan(entity.GetFieldPointers()...)
+	err = db.QueryRow(query).Scan(entity.GetFieldPointers([]string{})...)
 
 	return
 }
 
-func (db mysqlDb) SelectEntityMultiple(out interface{}, fields []string, tableJoins []Join, conditions []Condition) (err error) {
+func (db mysqlDb) SelectEntityMultiple(out interface{}, fields []string, tableJoins []Join, conditions []Condition, sort Sort) (err error) {
 	var query string
 	var conditionString string
 	var joinString string
 	var fieldsString string
+	var with []string
+	var sortString string
 
 	entityType := reflect.TypeOf(out).Elem().Elem()
 	outValue := reflect.Indirect(reflect.ValueOf(out))
@@ -204,6 +205,7 @@ func (db mysqlDb) SelectEntityMultiple(out interface{}, fields []string, tableJo
 	// join
 	for i := 0; i < len(tableJoins); i++ {
 		tableJoin := tableJoins[i]
+		with = append(with, tableJoin.Name)
 
 		joinString += tableJoin.Type + " join " + tableJoin.Name + " on " + fmt.Sprintf("%s %s %s", tableJoin.Condition.Param, tableJoin.Condition.Operator, tableJoin.Condition.Value)
 	}
@@ -222,24 +224,33 @@ func (db mysqlDb) SelectEntityMultiple(out interface{}, fields []string, tableJo
 		conditionString += fmt.Sprintf("%s %s %s ", condition.Param, condition.Operator, condition.Value)
 	}
 
-	query = fmt.Sprintf("select %s from %s %s %s", fieldsString, tableName, joinString, conditionString)
+	// sort
+	if len(sort.Fields) > 0 {
+		sortString += " order by "
+
+		for _, sortField := range sort.Fields {
+			sortString += " " + sortField
+		}
+
+		sortString += " " + sort.Direction + " "
+	}
+
+	query = fmt.Sprintf("select %s from %s %s %s %s", fieldsString, tableName, joinString, conditionString, sortString)
 
 	//fmt.Println(query)
 
 	rows, err := db.Query(query)
 
 	if err != nil {
-		log.Println(err.Error())
 		return
 	}
 
 	for rows.Next() {
-		var entity Entity = reflectEntity
+		var entity Entity = (reflect.New(entityType).Interface()).(Entity)
 
-		err = rows.Scan(entity.GetFieldPointers()...)
+		err = rows.Scan(entity.GetFieldPointers(with)...)
 
 		if err != nil {
-			log.Println(err.Error())
 			return
 		}
 

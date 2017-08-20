@@ -5,13 +5,19 @@ import (
 	"github.com/buaazp/fasthttprouter"
 	"github.com/rannoch/highloadcup2017/storage"
 	"github.com/rannoch/highloadcup2017/handlers"
+	"os"
+	"log"
 )
 
 
 func main() {
+	if len(os.Args) < 2 {
+		log.Fatal("not enough args")
+	}
+
 	storage.Init()
 
-	//LoadData("data")
+	LoadData(os.Args[1])
 
 	router := fasthttprouter.New()
 	//router.POST("/:entity/new", entityNewHandler)

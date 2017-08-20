@@ -18,9 +18,10 @@ type User struct {
 	Last_name  string `json:"last_name"`
 	Gender     string `json:"gender"`
 	Birth_date int32 `json:"birth_date"`
+	Visits     []*Visit
 }
 
-func (user *User) TableName() string{
+func (user *User) TableName() string {
 	return "user"
 }
 
@@ -28,7 +29,7 @@ func (user *User) GetId() int32 {
 	return user.Id
 }
 
-func (user *User) GetFields(alias string) []string{
+func (user *User) GetFields(alias string) []string {
 	return []string{"id", "email", "first_name", "last_name", "gender", "birth_date"}
 }
 
@@ -37,7 +38,11 @@ func (user *User) ValidateParams(params map[string]interface{}, scenario string)
 		return false
 	}
 
-	for param, _ := range params {
+	for param, value := range params {
+		if value == nil {
+			return false
+		}
+
 		if scenario == "update" && param == "id" {
 			return false
 		}
@@ -55,8 +60,9 @@ func (user *User) SetParams(params map[string]interface{}) {
 
 	for param, value := range params {
 		field := userValue.FieldByName(strings.Title(param))
+		fmt.Sprintf("%s=%v", param, value)
 
-		switch field.Interface().(type){
+		switch field.Interface().(type) {
 		case int32:
 			switch value.(type) {
 			case int32:
@@ -76,7 +82,7 @@ func (user *User) GetValues() []interface{} {
 	return []interface{}{user.Id, user.Email, user.First_name, user.Last_name, user.Gender, user.Birth_date}
 }
 
-func (user *User) GetFieldPointers() []interface{} {
+func (user *User) GetFieldPointers(with []string) []interface{} {
 	return []interface{}{&user.Id, &user.Email, &user.First_name, &user.Last_name, &user.Gender, &user.Birth_date}
 }
 
@@ -91,7 +97,7 @@ func (baskaTime *BaskaTime) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	baskaTime.Time = time.Unix(0,0)
+	baskaTime.Time = time.Unix(0, 0)
 
 	baskaTime.Time = baskaTime.Add(time.Duration(timestamp) * time.Second)
 
@@ -110,13 +116,13 @@ func (baskaTime *BaskaTime) Scan(value interface{}) error {
 	if value == nil {
 		return nil
 	}
-	v, ok := value.(time.Time); if ok {
+	v, ok := value.(time.Time);
+	if ok {
 		baskaTime.Time = v
 	}
 
 	return nil
 }
-
 
 func (baskaTime BaskaTime) Value() (driver.Value, error) {
 	return baskaTime.Time, nil

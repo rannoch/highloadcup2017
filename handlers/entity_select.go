@@ -7,7 +7,6 @@ import (
 	"strings"
 	"database/sql"
 	"encoding/json"
-	"log"
 	"strconv"
 )
 
@@ -22,15 +21,14 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 	id, err := strconv.Atoi(ctx.UserValue("id").(string))
 
 	if err != nil {
-		ctx.Error("", fasthttp.StatusBadRequest)
-		log.Printf("id parse error %v \n", ctx.UserValue("id"))
+		ctx.Error("", fasthttp.StatusNotFound)
 		return
 	}
 
 	entityValue, ok := ctx.UserValue("entity").(string)
 
 	if !ok {
-		ctx.Error("", fasthttp.StatusBadRequest)
+		ctx.Error("", fasthttp.StatusNotFound)
 		return
 	}
 
@@ -61,7 +59,6 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 
 	response, err := json.Marshal(entity)
 	if err != nil {
-		log.Println(err)
 		ctx.Error("", fasthttp.StatusNotFound)
 		return
 	}

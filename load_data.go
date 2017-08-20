@@ -6,29 +6,49 @@ import (
 	"strings"
 	"github.com/rannoch/highloadcup2017/models"
 	"encoding/json"
-	"log"
 	"github.com/rannoch/highloadcup2017/storage"
+	"time"
+	"sync"
 )
 
 func LoadData(path string) (err error) {
-	files, _ := ioutil.ReadDir(path)
-	for _, f := range files {
-		fmt.Println(f.Name())
+	start := time.Now()
 
+	files, _ := ioutil.ReadDir(path)
+	var wg sync.WaitGroup
+
+	for _, f := range files {
 		entities := parseFile(path + "/" + f.Name())
 
-		/*for _, entity := range entities {
-			err = storage.InsertEntity(entity)
+		fmt.Printf("%s len - %d \n", f.Name(), len(entities))
 
-			if err != nil {
-				log.Println(err.Error())
+		if len(entities) > 5000 {
+			for i := 0; i < len(entities); i = i + 5000 {
+				start := i
+				end := i + 5000
+				if end > len(entities) {
+					end = len(entities)
+				}
+
+				go func() {
+					wg.Add(1)
+					storage.Db.InsertEntityMultiple(entities[start: end])
+					wg.Done()
+				}()
 			}
-		}*/
-		err = storage.Db.InsertEntityMultiple(entities)
-		if err != nil {
-			log.Println(err.Error())
+		} else {
+			go func() {
+				wg.Add(1)
+				storage.Db.InsertEntityMultiple(entities)
+				wg.Done()
+			} ()
 		}
 	}
+
+	wg.Wait()
+
+	elapsed := time.Since(start)
+	fmt.Println(elapsed)
 
 	return
 }
@@ -39,7 +59,6 @@ func parseFile(file string) (entities []storage.Entity) {
 	fileContent, err := ioutil.ReadFile(file)
 
 	if err != nil {
-		log.Println(err.Error())
 		return
 	}
 
@@ -49,7 +68,6 @@ func parseFile(file string) (entities []storage.Entity) {
 		err = json.Unmarshal(fileContent, &m)
 
 		if err != nil {
-			log.Println(err.Error())
 			return
 		}
 		for _, v := range m["users"] {
@@ -62,7 +80,6 @@ func parseFile(file string) (entities []storage.Entity) {
 		err = json.Unmarshal(fileContent, &m)
 
 		if err != nil {
-			log.Println(err.Error())
 			return
 		}
 
@@ -75,7 +92,6 @@ func parseFile(file string) (entities []storage.Entity) {
 		err = json.Unmarshal(fileContent, &m)
 
 		if err != nil {
-			log.Println(err.Error())
 			return
 		}
 

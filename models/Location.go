@@ -12,6 +12,7 @@ type Location struct {
 	Country string `json:"country"`
 	City string `json:"city"`
 	Distance int32 `json:"distance"`
+	Visits []*Visit
 }
 
 func (location *Location) TableName() string {
@@ -30,7 +31,7 @@ func (location *Location) GetValues() []interface{} {
 	return []interface{}{location.Id, location.Place, location.Country, location.City, location.Distance}
 }
 
-func (location *Location) GetFieldPointers() []interface{} {
+func (location *Location) GetFieldPointers(with []string) []interface{} {
 	return []interface{}{&location.Id, &location.Place, &location.Country, &location.City, &location.Distance}
 }
 
@@ -39,7 +40,11 @@ func (location *Location) ValidateParams(params map[string]interface{}, scenario
 		return false
 	}
 
-	for param, _ := range params {
+	for param, value := range params {
+		if value == nil {
+			return false
+		}
+
 		if scenario == "update" && param == "id" {
 			return false
 		}

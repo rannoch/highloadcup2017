@@ -11,13 +11,13 @@ RUN yum install -y wget && \
 # Устанавливаем Go, создаем workspace и папку проекта
 RUN tar -C /usr/local -xzf go1.8.3.linux-amd64.tar.gz && \
     mkdir go && mkdir go/src && mkdir go/bin && mkdir go/pkg && \
-    mkdir go/src/dumb
+    mkdir go/src/highloadcup2017
 
 # Задаем переменные окружения для работы Go
 ENV PATH=${PATH}:/usr/local/go/bin GOROOT=/usr/local/go GOPATH=/root/go
 
 # Копируем наш исходный main.go внутрь контейнера, в папку go/src/dumb
-ADD main.go go/src/dumb
+COPY . go/src/highloadcup2017
 
 # Компилируем и устанавливаем наш сервер
 RUN go build dumb && go install dumb

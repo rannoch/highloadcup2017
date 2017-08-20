@@ -13,7 +13,6 @@ create table user (
   birth_date int
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-
 create table location (
 	id int primary key,
   place text,
@@ -30,3 +29,8 @@ create table visit (
   mark tinyint(1)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+create index user_idx on visit (user);
+create index location_idx on visit (location);
+
+set global max_prepared_stmt_count=32764*2;

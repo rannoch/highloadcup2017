@@ -4,7 +4,6 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/rannoch/highloadcup2017/storage"
 	"github.com/rannoch/highloadcup2017/models"
-	"log"
 	"strconv"
 	"database/sql"
 	"encoding/json"
@@ -14,29 +13,57 @@ import (
 func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
-	var id int
+	var id, fromDate, toDate, fromAge, toAge int
+	var err error
 
-	var fromDate = ctx.QueryArgs().GetUintOrZero("fromDate")
-	var toDate = ctx.QueryArgs().GetUintOrZero("toDate")
-	var fromAge = ctx.QueryArgs().GetUintOrZero("fromAge")
-	var toAge = ctx.QueryArgs().GetUintOrZero("toAge")
+	if ctx.QueryArgs().Has("fromDate") {
+		fromDate, err = ctx.QueryArgs().GetUint("fromDate")
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+	}
+	if ctx.QueryArgs().Has("toDate") {
+		toDate, err = ctx.QueryArgs().GetUint("toDate")
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+	}
+	if ctx.QueryArgs().Has("fromAge") {
+		fromAge, err = ctx.QueryArgs().GetUint("fromAge")
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+	}
+	if ctx.QueryArgs().Has("toAge") {
+		toAge, err = ctx.QueryArgs().GetUint("toAge")
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+	}
+
 	var gender = (string)(ctx.QueryArgs().Peek("gender"))
 
 	var avg float32 = 0
 	var conditions []storage.Condition
 	var joins []storage.Join
 
-	id, err := strconv.Atoi(ctx.UserValue("id").(string))
+	id, err = strconv.Atoi(ctx.UserValue("id").(string))
 
 	if err != nil {
 		ctx.Error("", fasthttp.StatusNotFound)
-		log.Printf("id parse error %v \n", ctx.UserValue("id"))
 		return
 	}
 
 	if gender != "" && !(gender == "m" || gender == "f") {
 		ctx.Error("", fasthttp.StatusBadRequest)
-		log.Printf("invalid gender %s \n", gender)
 		return
 	}
 
@@ -47,6 +74,21 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 		JoinCondition: "and",
 	}
 	conditions = append(conditions, idCondition)
+
+	location := models.Location{}
+	err = storage.Db.SelectEntity(&location, []storage.Condition{
+		{
+			Param:         "id",
+			Value:         strconv.Itoa(id),
+			Operator:      "=",
+			JoinCondition: "and",
+		},
+	})
+
+	if err == sql.ErrNoRows {
+		ctx.Error("", fasthttp.StatusNotFound)
+		return
+	}
 
 	if fromDate > 0 {
 		conditions = append(conditions, storage.Condition{
@@ -114,7 +156,6 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 
 	response, err := json.Marshal(map[string]interface{}{"avg" : models.FloatPrecision5(avg) })
 	if err != nil {
-		log.Println(err)
 		ctx.Error("Unsupported path", fasthttp.StatusNotFound)
 		return
 	}
