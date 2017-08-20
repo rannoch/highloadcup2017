@@ -150,7 +150,6 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	ctx.SetBody([]byte("{}"))
-	ctx.SetConnectionClose()
 }
 
 func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
@@ -229,5 +228,4 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	ctx.SetBody([]byte("{}"))
-	ctx.SetConnectionClose()
 }

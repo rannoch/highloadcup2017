@@ -123,5 +123,4 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	ctx.SetBody(response)
-	ctx.SetConnectionClose()
 }

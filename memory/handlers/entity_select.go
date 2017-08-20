@@ -42,5 +42,4 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	ctx.SetBody(response)
-	ctx.SetConnectionClose()
 }
