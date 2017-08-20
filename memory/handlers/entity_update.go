@@ -16,6 +16,8 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 	var entityValue string
 	var params map[string]interface{}
 
+	defer ctx.SetConnectionClose()
+
 	if ctx.UserValue("id").(string) == "new" {
 		EntitityNewHandler(ctx)
 		return
@@ -157,6 +159,8 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
 
 	var entityValue string
 	var params map[string]interface{}
+
+	defer ctx.SetConnectionClose()
 
 	entityValue, ok := ctx.UserValue("entity").(string)
 
