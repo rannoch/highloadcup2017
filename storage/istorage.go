@@ -1,5 +1,7 @@
 package storage
 
+var Db IStorage
+
 type IStorage interface {
 	InsertEntity(entity Entity) error
 	InsertEntityMultiple(entities []Entity) error
@@ -17,6 +19,7 @@ type Entity interface {
 	GetFieldPointers(with []string) []interface{}
 	ValidateParams(params map[string]interface{}, scenario string) (result bool)
 	SetParams(params map[string]interface{})
+	HasForeignRelations() bool
 }
 
 type Condition struct {

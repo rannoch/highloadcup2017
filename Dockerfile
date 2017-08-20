@@ -20,12 +20,15 @@ RUN mkdir data
 
 RUN yum install zip & yum install unzip -y
 
-RUN wget http://repo.mysql.com/mysql-community-release-el7-5.noarch.rpm
-RUN rpm -ivh mysql-community-release-el7-5.noarch.rpm
-RUN yum update -y
-RUN yum install mysql-server -y
+RUN wget http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm
+RUN yum localinstall mysql57-community-release-el7-7.noarch.rpm -y
+RUN yum install mysql-community-server -y
 #
-RUN mysql_install_db
+#RUN mysql_install_db
+
+RUN chown -R mysql /var/lib/mysql
+RUN chgrp -R mysql /var/lib/mysql
+
 #COPY storage/my.cnf /etc/
 
 # Задаем переменные окружения для работы Go

@@ -18,7 +18,7 @@ type User struct {
 	Last_name  string `json:"last_name"`
 	Gender     string `json:"gender"`
 	Birth_date int32 `json:"birth_date"`
-	Visits     []*Visit
+	Visits     []*Visit `json:"-"`
 }
 
 func (user *User) HasForeignRelations() bool {

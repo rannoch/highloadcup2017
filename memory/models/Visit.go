@@ -7,13 +7,13 @@ import (
 )
 
 type Visit struct {
-	Id            int32 `json:"id"`
-	Location      int32 `json:"location"`
-	User          int32 `json:"user"`
-	Visited_at    int32 `json:"visited_at"`
-	Mark          int32 `json:"mark"`
-	LocationChild *Location `json:"-" relation:"location"`
-	UserChild     *User `json:"-" relation:"user"`
+	Id          int32 `json:"id"`
+	Location_id int32 `json:"location"`
+	User_id     int32 `json:"user"`
+	Visited_at  int32 `json:"visited_at"`
+	Mark        int32 `json:"mark"`
+	Location    *Location `json:"-" relation:"location"`
+	User        *User `json:"-" relation:"user"`
 }
 
 func (visit *Visit) HasForeignRelations() bool {
@@ -59,19 +59,19 @@ func (visit *Visit) ValidateParams(params map[string]interface{}, scenario strin
 }
 
 func (visit *Visit) GetValues() []interface{} {
-	return []interface{}{visit.Id, visit.Location, visit.User, visit.Visited_at, visit.Mark}
+	return []interface{}{visit.Id, visit.Location_id, visit.User_id, visit.Visited_at, visit.Mark}
 }
 
 func (visit *Visit) GetFieldPointers(with []string) []interface{} {
-	fieldPointers := []interface{}{&visit.Id, &visit.Location, &visit.User, &visit.Visited_at, &visit.Mark}
+	fieldPointers := []interface{}{&visit.Id, &visit.Location_id, &visit.User_id, &visit.Visited_at, &visit.Mark}
 
 	for _, v := range with {
 		if v == "location" {
-			if visit.LocationChild == nil {
-				visit.LocationChild = &Location{}
+			if visit.Location == nil {
+				visit.Location = &Location{}
 			}
 
-			fieldPointers = append(fieldPointers, visit.LocationChild.GetFieldPointers([]string{})...)
+			fieldPointers = append(fieldPointers, visit.Location.GetFieldPointers([]string{})...)
 		}
 	}
 

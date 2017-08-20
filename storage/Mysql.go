@@ -9,14 +9,12 @@ import (
 	"reflect"
 )
 
-var Db IStorage
-
 type mysqlDb struct {
 	*sql.DB
 }
 
 func Init() {
-	dataSourceName := fmt.Sprintf("%s:%s@/%s?charset=utf8&parseTime=true", "root", "1234", "hlcup2017")
+	dataSourceName := fmt.Sprintf("%s:%s@/%s?charset=utf8&parseTime=true", "root", "1", "hlcup2017")
 	var err error
 	var mysqlDb mysqlDb
 

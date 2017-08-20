@@ -12,7 +12,7 @@ type Location struct {
 	Country string `json:"country"`
 	City string `json:"city"`
 	Distance int32 `json:"distance"`
-	Visits []*Visit
+	Visits []*Visit `json:"-"`
 }
 
 func (location *Location) HasForeignRelations() bool {

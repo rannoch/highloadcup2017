@@ -4,8 +4,8 @@
 #echo | ls /tmp/data/
 unzip -j /tmp/data/data.zip '*.json' -d data
 #(echo y | nohup mysqld -u root) &
+mysqld -u root --initialize-insecure
 nohup mysqld -u root &
-
 sleep 10
 #mysqladmin -u root status
 
