@@ -7,13 +7,13 @@ import (
 )
 
 type Visit struct {
-	Id          int32 `json:"id"`
-	Location_id int32 `json:"location"`
-	User_id     int32 `json:"user"`
-	Visited_at  int32 `json:"visited_at"`
-	Mark        int32 `json:"mark"`
-	Location    *Location `json:"-" relation:"location"`
-	User        *User `json:"-" relation:"user"`
+	Id             int32 `json:"id"`
+	Location       int32 `json:"location"`
+	User           int32 `json:"user"`
+	Visited_at     int32 `json:"visited_at"`
+	Mark           int32 `json:"mark"`
+	Location_model *Location `json:"-" relation:"location"`
+	User_model     *User `json:"-" relation:"user"`
 }
 
 func (visit *Visit) HasForeignRelations() bool {
@@ -59,19 +59,19 @@ func (visit *Visit) ValidateParams(params map[string]interface{}, scenario strin
 }
 
 func (visit *Visit) GetValues() []interface{} {
-	return []interface{}{visit.Id, visit.Location_id, visit.User_id, visit.Visited_at, visit.Mark}
+	return []interface{}{visit.Id, visit.Location, visit.User, visit.Visited_at, visit.Mark}
 }
 
 func (visit *Visit) GetFieldPointers(with []string) []interface{} {
-	fieldPointers := []interface{}{&visit.Id, &visit.Location_id, &visit.User_id, &visit.Visited_at, &visit.Mark}
+	fieldPointers := []interface{}{&visit.Id, &visit.Location, &visit.User, &visit.Visited_at, &visit.Mark}
 
 	for _, v := range with {
 		if v == "location" {
-			if visit.Location == nil {
-				visit.Location = &Location{}
+			if visit.Location_model == nil {
+				visit.Location_model = &Location{}
 			}
 
-			fieldPointers = append(fieldPointers, visit.Location.GetFieldPointers([]string{})...)
+			fieldPointers = append(fieldPointers, visit.Location_model.GetFieldPointers([]string{})...)
 		}
 	}
 
@@ -98,4 +98,16 @@ func (visit *Visit) SetParams(params map[string]interface{}) {
 			field.SetString(value.(string))
 		}
 	}
+}
+
+type VisitByDateAsc []Visit
+
+func (s VisitByDateAsc) Len() int {
+	return len(s)
+}
+func (s VisitByDateAsc) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s VisitByDateAsc) Less(i, j int) bool {
+	return s[i].Visited_at < s[j].Visited_at
 }

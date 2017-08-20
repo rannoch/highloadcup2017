@@ -2,20 +2,17 @@ package handlers
 
 import (
 	"github.com/valyala/fasthttp"
-	"github.com/rannoch/highloadcup2017/storage"
+	"github.com/rannoch/highloadcup2017/memory/storage"
 	"strconv"
 	"strings"
-	"github.com/rannoch/highloadcup2017/models"
+	"github.com/rannoch/highloadcup2017/memory/models"
 	"encoding/json"
-	"database/sql"
 )
 
 func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
 	var id int
-	var entity storage.Entity
-	var conditions []storage.Condition
 	var entityValue string
 	var params map[string]interface{}
 
@@ -38,15 +35,6 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	switch {
-	case strings.Contains(entityValue, "user"):
-		entity = &models.User{}
-	case strings.Contains(entityValue, "location"):
-		entity = &models.Location{}
-	case strings.Contains(entityValue, "visit"):
-		entity = &models.Visit{}
-	}
-
 	// check params
 	err = json.Unmarshal(ctx.PostBody(), &params)
 
@@ -55,31 +43,110 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	if !entity.ValidateParams(params, "update") {
-		ctx.Error("", fasthttp.StatusBadRequest)
-		return
-	}
+	switch {
+	case strings.Contains(entityValue, "user"):
+		e, ok := storage.Db["user"][int32(id)]
+		if !ok {
+			ctx.Error("", fasthttp.StatusNotFound)
+			return
+		}
 
-	idCondition := storage.Condition{
-		Param:         "id",
-		Value:         strconv.Itoa(id),
-		Operator:      "=",
-		JoinCondition: "and",
-	}
-	conditions = append(conditions, idCondition)
+		entity := e.(*models.User)
 
-	err = storage.Db.SelectEntity(entity, conditions)
+		if !entity.ValidateParams(params, "update") {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
 
-	if err == sql.ErrNoRows {
-		ctx.Error("", fasthttp.StatusNotFound)
-		return
-	}
+		entity.SetParams(params)
+	case strings.Contains(entityValue, "location"):
+		e, ok := storage.Db["location"][int32(id)]
+		if !ok {
+			ctx.Error("", fasthttp.StatusNotFound)
+			return
+		}
 
-	_, err = storage.Db.UpdateEntity(entity, params, conditions)
+		entity := e.(*models.Location)
 
-	if err != nil {
-		ctx.Error("", fasthttp.StatusBadRequest)
-		return
+		if !entity.ValidateParams(params, "update") {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+
+		entity.SetParams(params)
+	case strings.Contains(entityValue, "visit"):
+		e, ok := storage.Db["visit"][int32(id)]
+		if !ok {
+			ctx.Error("", fasthttp.StatusNotFound)
+			return
+		}
+
+		entity := e.(*models.Visit)
+
+		if !entity.ValidateParams(params, "update") {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+
+		userParam, ok := params["user"]
+		if ok && userParam != entity.User {
+			var userIdOld int32 = entity.User
+			var userIdUpdated int32
+			switch userParam.(type) {
+			case int32:
+				userIdUpdated = userParam.(int32)
+			case float32:
+				userIdUpdated = int32(userParam.(float32))
+			case float64:
+				userIdUpdated = int32(userParam.(float64))
+			}
+
+			userUpdated := storage.Db["user"][userIdUpdated].(*models.User)
+			userOld := storage.Db["user"][userIdOld].(*models.User)
+
+			entity.User_model = userUpdated
+
+			// удаляю визит из старого пользователя
+			for i, visit := range userOld.Visits {
+				if visit.Id == entity.Id {
+					userOld.Visits = append(userOld.Visits[:i], userOld.Visits[i+1:]...)
+					break
+				}
+			}
+			// добавляю в нового
+			userUpdated.Visits = append(userUpdated.Visits, entity)
+		}
+
+		locationParam, ok := params["location"]
+		if ok && locationParam != entity.Location {
+			var locationIdOld int32 = entity.Location
+			var locationIdUpdated int32
+			switch locationParam.(type) {
+			case int32:
+				locationIdUpdated = locationParam.(int32)
+			case float32:
+				locationIdUpdated = int32(locationParam.(float32))
+			case float64:
+				locationIdUpdated = int32(locationParam.(float64))
+			}
+
+			locationUpdated := storage.Db["location"][locationIdUpdated].(*models.Location)
+			locationOld := storage.Db["location"][locationIdOld].(*models.Location)
+
+			entity.Location_model = locationUpdated
+
+			// удаляю визит из старого пользователя
+			for i, visit := range locationOld.Visits {
+				if visit.Id == entity.Id {
+					locationOld.Visits = append(locationOld.Visits[:i], locationOld.Visits[i+1:]...)
+					break
+				}
+			}
+			// добавляю в нового
+			locationUpdated.Visits = append(locationUpdated.Visits, entity)
+		}
+
+		entity.SetParams(params)
 	}
 
 	ctx.SetBody([]byte("{}"))
@@ -90,7 +157,6 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
 	var entityValue string
-	var entity storage.Entity
 	var params map[string]interface{}
 
 	entityValue, ok := ctx.UserValue("entity").(string)
@@ -102,33 +168,64 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
 
 	switch {
 	case strings.Contains(entityValue, "user"):
-		entity = &models.User{}
+		entity := &models.User{}
+		// check params
+		err := json.Unmarshal(ctx.PostBody(), &params)
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+
+		if !entity.ValidateParams(params, "insert") {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+
+		entity.SetParams(params)
+
+		storage.Db["user"][entity.Id] = entity
 	case strings.Contains(entityValue, "location"):
-		entity = &models.Location{}
+		entity := &models.Location{}
+
+		err := json.Unmarshal(ctx.PostBody(), &params)
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+
+		if !entity.ValidateParams(params, "insert") {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+
+		entity.SetParams(params)
+
+		storage.Db["location"][entity.Id] = entity
 	case strings.Contains(entityValue, "visit"):
-		entity = &models.Visit{}
-	}
+		entity := &models.Visit{}
 
-	// check params
-	err := json.Unmarshal(ctx.PostBody(), &params)
+		err := json.Unmarshal(ctx.PostBody(), &params)
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
 
-	if err != nil {
-		ctx.Error("", fasthttp.StatusBadRequest)
-		return
-	}
+		if !entity.ValidateParams(params, "insert") {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
 
-	if !entity.ValidateParams(params, "insert") {
-		ctx.Error("", fasthttp.StatusBadRequest)
-		return
-	}
+		entity.SetParams(params)
+		storage.Db["visit"][entity.Id] = entity
 
-	entity.SetParams(params)
+		user := storage.Db["user"][entity.User].(*models.User)
+		location := storage.Db["location"][entity.Location].(*models.Location)
 
-	err = storage.Db.InsertEntity(entity)
+		entity.User_model = user
+		entity.Location_model = location
 
-	if err != nil {
-		ctx.Error("", fasthttp.StatusBadRequest)
-		return
+		user.Visits = append(user.Visits, entity)
+		location.Visits = append(location.Visits, entity)
 	}
 
 	ctx.SetBody([]byte("{}"))

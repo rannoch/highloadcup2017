@@ -25,18 +25,18 @@ func LoadData(path string) (err error) {
 	for _, v := range storage.Db["visit"] {
 		visit := v.(*models.Visit)
 
-		user, ok := storage.Db["user"][visit.User_id]
+		user, ok := storage.Db["user"][visit.User]
 
 		if ok {
-			visit.User = user.(*models.User)
+			visit.User_model = user.(*models.User)
 
 			user.(*models.User).Visits = append(user.(*models.User).Visits, visit)
 		}
 
-		location, ok := storage.Db["location"][visit.Location_id]
+		location, ok := storage.Db["location"][visit.Location]
 
 		if ok {
-			visit.Location = location.(*models.Location)
+			visit.Location_model = location.(*models.Location)
 
 			location.(*models.Location).Visits = append(location.(*models.Location).Visits, visit)
 		}

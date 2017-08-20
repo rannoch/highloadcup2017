@@ -5,7 +5,6 @@ import (
 	"github.com/rannoch/highloadcup2017/memory/storage"
 	"encoding/json"
 	"strconv"
-	"fmt"
 )
 
 func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
@@ -18,19 +17,18 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 	id, err := strconv.Atoi(ctx.UserValue("id").(string))
 
 	if err != nil {
-		fmt.Println(err.Error())
 		ctx.Error("", fasthttp.StatusNotFound)
 		return
 	}
 
 	entityValue, ok := ctx.UserValue("entity").(string)
 
-	if !ok {
+	if !ok || !(entityValue == "users" || entityValue == "locations" || entityValue == "visits"){
 		ctx.Error("", fasthttp.StatusNotFound)
 		return
 	}
 
-	entity = storage.Db[entityValue][int32(id)]
+	entity = storage.Db[entityValue[:len(entityValue) - 1]][int32(id)]
 
 	if entity == nil {
 		ctx.Error("", fasthttp.StatusNotFound)

@@ -24,7 +24,7 @@ func main() {
 	router := fasthttprouter.New()
 	//router.POST("/:entity/new", entityNewHandler)
 	router.GET("/:entity/:id", handlers.EntitySelectHandler)
-	//router.POST("/:entity/:id", handlers.EntityUpdateHandler)
+	router.POST("/:entity/:id", handlers.EntityUpdateHandler)
 
 	router.GET("/:entity/:id/visits", handlers.UsersVisitsHandler)
 	router.GET("/:entity/:id/avg", handlers.LocationsAvgHandler)

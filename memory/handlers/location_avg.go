@@ -71,10 +71,15 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	location := l.(*models.Location)
-	visits := location.Visits
+	visits := []models.Visit{}
+
+	for _, visit := range location.Visits {
+		visits = append(visits, *visit)
+	}
 
 	if fromDate > 0 {
-		for i, visit := range visits {
+		for i := len(visits) - 1; i >= 0; i -- {
+			visit := visits[i]
 			if visit.Visited_at < int32(fromDate) {
 				visits = append(visits[:i], visits[i+1:]...)
 			}
@@ -82,7 +87,8 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	if toDate > 0 {
-		for i, visit := range visits {
+		for i := len(visits) - 1; i >= 0; i -- {
+			visit := visits[i]
 			if visit.Visited_at > int32(toDate) {
 				visits = append(visits[:i], visits[i+1:]...)
 			}
@@ -90,24 +96,27 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	if fromAge > 0 {
-		for i, visit := range visits {
-			if visit.User.Birth_date >= int32(time.Now().AddDate(-fromAge, 0, 0).Unix()) {
+		for i := len(visits) - 1; i >= 0; i -- {
+			visit := visits[i]
+			if visit.User_model.Birth_date >= int32(time.Now().AddDate(-fromAge, 0, 0).Unix()) {
 				visits = append(visits[:i], visits[i+1:]...)
 			}
 		}
 	}
 
 	if toAge > 0 {
-		for i, visit := range visits {
-			if visit.User.Birth_date <= int32(time.Now().AddDate(-toAge, 0, 0).Unix()) {
+		for i := len(visits) - 1; i >= 0; i -- {
+			visit := visits[i]
+			if visit.User_model.Birth_date <= int32(time.Now().AddDate(-toAge, 0, 0).Unix()) {
 				visits = append(visits[:i], visits[i+1:]...)
 			}
 		}
 	}
 
 	if len(gender) > 0 {
-		for i, visit := range visits {
-			if visit.User.Gender != gender {
+		for i := len(visits) - 1; i >= 0; i -- {
+			visit := visits[i]
+			if visit.User_model.Gender != gender {
 				visits = append(visits[:i], visits[i+1:]...)
 			}
 		}
@@ -118,11 +127,13 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 		marksSum += visit.Mark
 	}
 
-	avg = float32(marksSum) / float32(len(visits))
+	if len(visits) > 0 {
+		avg = float32(marksSum) / float32(len(visits))
+	}
 
 	response, err := json.Marshal(map[string]interface{}{"avg": models.FloatPrecision5(avg) })
 	if err != nil {
-		ctx.Error("Unsupported path", fasthttp.StatusNotFound)
+		ctx.Error("", fasthttp.StatusNotFound)
 		return
 	}
 

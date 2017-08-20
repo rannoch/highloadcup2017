@@ -6,6 +6,7 @@ import (
 	"github.com/rannoch/highloadcup2017/memory/storage"
 	"encoding/json"
 	"github.com/rannoch/highloadcup2017/memory/models"
+	"sort"
 )
 
 func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
@@ -58,10 +59,16 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	user := u.(*models.User)
-	visits := user.Visits
+
+	visits := []models.Visit{}
+
+	for _, visit := range user.Visits {
+		visits = append(visits, *visit)
+	}
 
 	if fromDate > 0 {
-		for i, visit := range visits {
+		for i := len(visits) - 1; i >= 0; i -- {
+			visit := visits[i]
 			if visit.Visited_at < int32(fromDate) {
 				visits = append(visits[:i], visits[i+1:]...)
 			}
@@ -69,7 +76,8 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	if toDate > 0 {
-		for i, visit := range visits {
+		for i := len(visits) - 1; i >= 0; i -- {
+			visit := visits[i]
 			if visit.Visited_at > int32(toDate) {
 				visits = append(visits[:i], visits[i+1:]...)
 			}
@@ -77,16 +85,18 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	if len(country) > 0 {
-		for i, visit := range visits {
-			if visit.Location.Country != country {
+		for i := len(visits) - 1; i >= 0; i -- {
+			visit := visits[i]
+			if visit.Location_model.Country != country {
 				visits = append(visits[:i], visits[i+1:]...)
 			}
 		}
 	}
 
 	if toDistance > 0 {
-		for i, visit := range visits {
-			if visit.Location.Distance >= int32(toDistance) {
+		for i := len(visits) - 1; i >= 0; i -- {
+			visit := visits[i]
+			if visit.Location_model.Distance >= int32(toDistance) {
 				visits = append(visits[:i], visits[i+1:]...)
 			}
 		}
@@ -94,11 +104,13 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 
 	visitsResponse := []interface{}{}
 
+	sort.Sort(models.VisitByDateAsc(visits))
+
 	for _, visit := range visits {
 		v := map[string]interface{}{
 			"mark":       visit.Mark,
 			"visited_at": visit.Visited_at,
-			"place":      visit.Location.Place,
+			"place":      visit.Location_model.Place,
 		}
 
 		visitsResponse = append(visitsResponse, v)
@@ -111,4 +123,5 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	ctx.SetBody(response)
+	ctx.SetConnectionClose()
 }
