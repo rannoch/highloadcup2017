@@ -11,13 +11,13 @@ import (
 
 
 func main() {
-	if len(os.Args) < 2 {
+	if len(os.Args) < 3 {
 		log.Fatal("not enough args")
 	}
 
 	storage.Init()
 
-	LoadData(os.Args[1])
+	LoadData(os.Args[2])
 
 	router := fasthttprouter.New()
 	//router.POST("/:entity/new", entityNewHandler)
@@ -27,6 +27,10 @@ func main() {
 	router.GET("/:entity/:id/visits", handlers.UsersVisitsHandler)
 	router.GET("/:entity/:id/avg", handlers.LocationsAvgHandler)
 
-	fasthttp.ListenAndServe(":8084", router.Handler)
+	err := fasthttp.ListenAndServe(":" + os.Args[1], router.Handler)
+
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }
 
