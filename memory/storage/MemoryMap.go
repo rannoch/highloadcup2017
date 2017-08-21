@@ -1,16 +1,14 @@
 package storage
 
-type MemoryMap map[string]EntityMap
+import "github.com/rannoch/highloadcup2017/memory/models"
 
-type EntityMap map[int32]interface{}
-
-var Db MemoryMap
+var UserDb map[int32]*models.User
+var LocationDb map[int32]*models.Location
+var VisitDb map[int32]*models.Visit
 
 // todo later
 func InitMemoryMap() {
-	Db = MemoryMap{
-		"user" : EntityMap{},
-		"location" : EntityMap{},
-		"visit" : EntityMap{},
-	}
+	UserDb = map[int32]*models.User{}
+	LocationDb = map[int32]*models.Location{}
+	VisitDb = map[int32]*models.Visit{}
 }

@@ -2,9 +2,8 @@ package models
 
 import (
 	"github.com/rannoch/highloadcup2017/util"
-	"reflect"
-	"strings"
 	"fmt"
+	"encoding/json"
 )
 
 type Location struct {
@@ -63,23 +62,39 @@ func (location *Location) ValidateParams(params map[string]interface{}, scenario
 }
 
 func (location *Location) SetParams(params map[string]interface{}) {
-	locationValue := reflect.ValueOf(location).Elem()
-
-	for param, value := range params {
-		field := locationValue.FieldByName(strings.Title(param))
-
-		switch field.Interface().(type) {
+	id, ok := params["id"]; if ok {
+		switch id.(type) {
 		case int32:
-			switch value.(type) {
-			case int32:
-				field.Set(reflect.ValueOf(value.(int32)))
-			case float32:
-				field.Set(reflect.ValueOf(int32(value.(float32))))
-			case float64:
-				field.Set(reflect.ValueOf(int32(value.(float64))))
-			}
-		case string:
-			field.SetString(value.(string))
+			location.Id = id.(int32)
+		case float32:
+			location.Id = int32(id.(float32))
+		case float64:
+			location.Id = int32(id.(float64))
+		case json.Number:
+			t, _ := id.(json.Number).Int64()
+			location.Id = int32(t)
+		}
+	}
+	place, ok := params["place"]; if ok {
+		location.Place = place.(string)
+	}
+	country, ok := params["country"]; if ok {
+		location.Country = country.(string)
+	}
+	city, ok := params["city"]; if ok {
+		location.City = city.(string)
+	}
+	distance, ok := params["distance"]; if ok {
+		switch distance.(type) {
+		case int32:
+			location.Distance = distance.(int32)
+		case float32:
+			location.Distance = int32(distance.(float32))
+		case float64:
+			location.Distance = int32(distance.(float64))
+		case json.Number:
+			t, _ := distance.(json.Number).Int64()
+			location.Distance = int32(t)
 		}
 	}
 }

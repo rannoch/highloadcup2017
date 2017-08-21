@@ -3,8 +3,6 @@ package handlers
 import (
 	"github.com/valyala/fasthttp"
 	"github.com/rannoch/highloadcup2017/memory/storage"
-	"github.com/rannoch/highloadcup2017/memory/models"
-	"strconv"
 	"time"
 	"fmt"
 )
@@ -12,7 +10,8 @@ import (
 func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
-	var id, fromDate, toDate, fromAge, toAge int
+	var fromDate, toDate, fromAge, toAge int
+	var id int32
 	var err error
 
 	if ctx.QueryArgs().Has("fromDate") {
@@ -52,25 +51,18 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 
 	var avg float32 = 0
 
-	id, err = strconv.Atoi(ctx.UserValue("id").(string))
-
-	if err != nil {
-		ctx.Error("", fasthttp.StatusNotFound)
-		return
-	}
+	id, _ = ctx.UserValue("id").(int32)
 
 	if gender != "" && !(gender == "m" || gender == "f") {
 		ctx.Error("", fasthttp.StatusBadRequest)
 		return
 	}
 
-	l, exist := storage.Db["location"][int32(id)]
+	location, exist := storage.LocationDb[id]
 	if !exist {
 		ctx.Error("", fasthttp.StatusNotFound)
 		return
 	}
-
-	location := l.(*models.Location)
 
 	var marksSum int32 = 0
 	var markCount int32 = 0

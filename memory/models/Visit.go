@@ -2,9 +2,8 @@ package models
 
 import (
 	"github.com/rannoch/highloadcup2017/util"
-	"reflect"
-	"strings"
 	"fmt"
+	"encoding/json"
 )
 
 type Visit struct {
@@ -80,25 +79,72 @@ func (visit *Visit) GetFieldPointers(with []string) []interface{} {
 }
 
 func (visit *Visit) SetParams(params map[string]interface{}) {
-	visitValue := reflect.ValueOf(visit).Elem()
-
-	for param, value := range params {
-		field := visitValue.FieldByName(strings.Title(param))
-
-		switch field.Interface().(type) {
+	id, ok := params["id"]; if ok {
+		switch id.(type) {
 		case int32:
-			switch value.(type) {
-			case int32:
-				field.Set(reflect.ValueOf(value.(int32)))
-			case float32:
-				field.Set(reflect.ValueOf(int32(value.(float32))))
-			case float64:
-				field.Set(reflect.ValueOf(int32(value.(float64))))
-			}
-		case string:
-			field.SetString(value.(string))
+			visit.Id = id.(int32)
+		case float32:
+			visit.Id = int32(id.(float32))
+		case float64:
+			visit.Id = int32(id.(float64))
 		}
 	}
+	location, ok := params["location"]; if ok {
+		switch location.(type) {
+		case int32:
+			visit.Location = location.(int32)
+		case float32:
+			visit.Location = int32(location.(float32))
+		case float64:
+			visit.Location = int32(location.(float64))
+		case json.Number:
+			t, _ := location.(json.Number).Int64()
+			visit.Location = int32(t)
+		}
+	}
+
+	user, ok := params["user"]; if ok {
+		switch user.(type) {
+		case int32:
+			visit.User = user.(int32)
+		case float32:
+			visit.User = int32(user.(float32))
+		case float64:
+			visit.User = int32(user.(float64))
+		case json.Number:
+			t, _ := user.(json.Number).Int64()
+			visit.User = int32(t)
+		}
+	}
+
+	visited_at, ok := params["visited_at"]; if ok {
+		switch visited_at.(type) {
+		case int32:
+			visit.Visited_at = visited_at.(int32)
+		case float32:
+			visit.Visited_at = int32(visited_at.(float32))
+		case float64:
+			visit.Visited_at = int32(visited_at.(float64))
+		case json.Number:
+			t, _ := visited_at.(json.Number).Int64()
+			visit.Visited_at = int32(t)
+		}
+	}
+
+	mark, ok := params["mark"]; if ok {
+		switch mark.(type) {
+		case int32:
+			visit.Mark = mark.(int32)
+		case float32:
+			visit.Mark = int32(mark.(float32))
+		case float64:
+			visit.Mark = int32(mark.(float64))
+		case json.Number:
+			t, _ := mark.(json.Number).Int64()
+			visit.Mark = int32(t)
+		}
+	}
+
 }
 
 type VisitByDateAsc []Visit

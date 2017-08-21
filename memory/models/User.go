@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"fmt"
 	"github.com/rannoch/highloadcup2017/util"
-	"reflect"
-	"strings"
 )
 
 type User struct {
@@ -60,24 +58,42 @@ func (user *User) ValidateParams(params map[string]interface{}, scenario string)
 }
 
 func (user *User) SetParams(params map[string]interface{}) {
-	userValue := reflect.ValueOf(user).Elem()
-
-	for param, value := range params {
-		field := userValue.FieldByName(strings.Title(param))
-		fmt.Sprintf("%s=%v", param, value)
-
-		switch field.Interface().(type) {
+	id, ok := params["id"]; if ok {
+		switch id.(type) {
 		case int32:
-			switch value.(type) {
-			case int32:
-				field.Set(reflect.ValueOf(value.(int32)))
-			case float32:
-				field.Set(reflect.ValueOf(int32(value.(float32))))
-			case float64:
-				field.Set(reflect.ValueOf(int32(value.(float64))))
-			}
-		case string:
-			field.SetString(value.(string))
+			user.Id = id.(int32)
+		case float32:
+			user.Id = int32(id.(float32))
+		case float64:
+			user.Id = int32(id.(float64))
+		case json.Number:
+			t, _ := id.(json.Number).Int64()
+			user.Id = int32(t)
+		}
+	}
+	email, ok := params["email"]; if ok {
+		user.Email = email.(string)
+	}
+	first_name, ok := params["first_name"]; if ok {
+		user.First_name = first_name.(string)
+	}
+	last_name, ok := params["last_name"]; if ok {
+		user.Last_name = last_name.(string)
+	}
+	gender, ok := params["gender"]; if ok {
+		user.Gender = gender.(string)
+	}
+	birth_date, ok := params["birth_date"]; if ok {
+		switch birth_date.(type) {
+		case int32:
+			user.Birth_date = birth_date.(int32)
+		case float32:
+			user.Birth_date = int32(birth_date.(float32))
+		case float64:
+			user.Birth_date = int32(birth_date.(float64))
+		case json.Number:
+			t, _ := birth_date.(json.Number).Int64()
+			user.Birth_date = int32(t)
 		}
 	}
 }
@@ -120,7 +136,7 @@ func (baskaTime *BaskaTime) Scan(value interface{}) error {
 	if value == nil {
 		return nil
 	}
-	v, ok := value.(time.Time);
+	v, ok := value.(time.Time)
 	if ok {
 		baskaTime.Time = v
 	}

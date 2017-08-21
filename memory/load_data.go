@@ -22,23 +22,21 @@ func LoadData(path string) (err error) {
 	}
 
 	// dependencies
-	for _, v := range storage.Db["visit"] {
-		visit := v.(*models.Visit)
-
-		user, ok := storage.Db["user"][visit.User]
+	for _, visit := range storage.VisitDb {
+		user, ok := storage.UserDb[visit.User]
 
 		if ok {
-			visit.User_model = user.(*models.User)
+			visit.User_model = user
 
-			user.(*models.User).Visits = append(user.(*models.User).Visits, visit)
+			user.Visits = append(user.Visits, visit)
 		}
 
-		location, ok := storage.Db["location"][visit.Location]
+		location, ok := storage.LocationDb[visit.Location]
 
 		if ok {
-			visit.Location_model = location.(*models.Location)
+			visit.Location_model = location
 
-			location.(*models.Location).Visits = append(location.(*models.Location).Visits, visit)
+			location.Visits = append(location.Visits, visit)
 		}
 	}
 
@@ -70,7 +68,7 @@ func parseAndAppendFile(file string) () {
 		for _, v := range m["users"] {
 			c := v
 
-			storage.Db["user"][v.Id] = &c
+			storage.UserDb[v.Id] = &c
 		}
 
 	case strings.Contains(file, "locations"):
@@ -84,7 +82,7 @@ func parseAndAppendFile(file string) () {
 		for _, v := range m["locations"] {
 			c := v
 
-			storage.Db["location"][v.Id] = &c
+			storage.LocationDb[v.Id] = &c
 		}
 	case strings.Contains(file, "visits"):
 		var m = make(map[string][]models.Visit)
@@ -97,7 +95,7 @@ func parseAndAppendFile(file string) () {
 		for _, v := range m["visits"] {
 			c := v
 
-			storage.Db["visit"][v.Id] = &c
+			storage.VisitDb[v.Id] = &c
 		}
 	}
 

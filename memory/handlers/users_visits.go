@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"github.com/valyala/fasthttp"
-	"strconv"
 	"github.com/rannoch/highloadcup2017/memory/storage"
 	"github.com/rannoch/highloadcup2017/memory/models"
 	"sort"
@@ -12,7 +11,7 @@ import (
 func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
-	var id int
+	var id int32
 	var fromDate, toDate, toDistance int
 	var err error
 
@@ -45,20 +44,13 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 
 	var country = (string)(ctx.QueryArgs().Peek("country"))
 
-	id, err = strconv.Atoi(ctx.UserValue("id").(string))
+	id, _ = ctx.UserValue("id").(int32)
 
-	if err != nil {
-		ctx.Error("", fasthttp.StatusNotFound)
-		return
-	}
-
-	u, exist := storage.Db["user"][int32(id)]
+	user, exist := storage.UserDb[id]
 	if !exist {
 		ctx.Error("", fasthttp.StatusNotFound)
 		return
 	}
-
-	user := u.(*models.User)
 
 	visits := []models.Visit{}
 

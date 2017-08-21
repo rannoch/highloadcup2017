@@ -3,32 +3,21 @@ package handlers
 import (
 	"github.com/valyala/fasthttp"
 	"github.com/rannoch/highloadcup2017/memory/storage"
-	"strconv"
-	"strings"
 	"github.com/rannoch/highloadcup2017/memory/models"
 	"encoding/json"
+	"github.com/antonholmquist/jason"
 )
 
 func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
-	var id int
+	var id int32
 	var entityValue string
 	var params map[string]interface{}
 
 	defer ctx.SetConnectionClose()
 
-	if ctx.UserValue("id").(string) == "new" {
-		EntitityNewHandler(ctx)
-		return
-	}
-
-	id, err := strconv.Atoi(ctx.UserValue("id").(string))
-
-	if err != nil {
-		ctx.Error("", fasthttp.StatusBadRequest)
-		return
-	}
+	id, _ = ctx.UserValue("id").(int32)
 
 	entityValue, ok := ctx.UserValue("entity").(string)
 
@@ -38,22 +27,20 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	// check params
-	err = json.Unmarshal(ctx.PostBody(), &params)
+	err := json.Unmarshal(ctx.PostBody(), &params)
 
 	if err != nil {
 		ctx.Error("", fasthttp.StatusBadRequest)
 		return
 	}
 
-	switch {
-	case strings.Contains(entityValue, "user"):
-		e, ok := storage.Db["user"][int32(id)]
+	switch entityValue {
+	case "users":
+		entity, ok := storage.UserDb[id]
 		if !ok {
 			ctx.Error("", fasthttp.StatusNotFound)
 			return
 		}
-
-		entity := e.(*models.User)
 
 		if !entity.ValidateParams(params, "update") {
 			ctx.Error("", fasthttp.StatusBadRequest)
@@ -61,14 +48,12 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 		}
 
 		entity.SetParams(params)
-	case strings.Contains(entityValue, "location"):
-		e, ok := storage.Db["location"][int32(id)]
+	case "locations":
+		entity, ok := storage.LocationDb[id]
 		if !ok {
 			ctx.Error("", fasthttp.StatusNotFound)
 			return
 		}
-
-		entity := e.(*models.Location)
 
 		if !entity.ValidateParams(params, "update") {
 			ctx.Error("", fasthttp.StatusBadRequest)
@@ -76,14 +61,12 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 		}
 
 		entity.SetParams(params)
-	case strings.Contains(entityValue, "visit"):
-		e, ok := storage.Db["visit"][int32(id)]
+	case "visits":
+		entity, ok := storage.VisitDb[id]
 		if !ok {
 			ctx.Error("", fasthttp.StatusNotFound)
 			return
 		}
-
-		entity := e.(*models.Visit)
 
 		if !entity.ValidateParams(params, "update") {
 			ctx.Error("", fasthttp.StatusBadRequest)
@@ -103,8 +86,8 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 				userIdUpdated = int32(userParam.(float64))
 			}
 
-			userUpdated := storage.Db["user"][userIdUpdated].(*models.User)
-			userOld := storage.Db["user"][userIdOld].(*models.User)
+			userUpdated := storage.UserDb[userIdUpdated]
+			userOld := storage.UserDb[userIdOld]
 
 			entity.User_model = userUpdated
 
@@ -132,8 +115,8 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 				locationIdUpdated = int32(locationParam.(float64))
 			}
 
-			locationUpdated := storage.Db["location"][locationIdUpdated].(*models.Location)
-			locationOld := storage.Db["location"][locationIdOld].(*models.Location)
+			locationUpdated := storage.LocationDb[locationIdUpdated]
+			locationOld := storage.LocationDb[locationIdOld]
 
 			entity.Location_model = locationUpdated
 
@@ -169,12 +152,19 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	switch {
-	case strings.Contains(entityValue, "user"):
+	switch entityValue{
+	case "users":
 		entity := &models.User{}
 		// check params
-		err := json.Unmarshal(ctx.PostBody(), &params)
+		postBody, err := jason.NewValueFromBytes(ctx.PostBody())
+
 		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+
+		params, ok := postBody.Interface().(map[string]interface{})
+		if !ok {
 			ctx.Error("", fasthttp.StatusBadRequest)
 			return
 		}
@@ -186,8 +176,8 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
 
 		entity.SetParams(params)
 
-		storage.Db["user"][entity.Id] = entity
-	case strings.Contains(entityValue, "location"):
+		storage.UserDb[entity.Id] = entity
+	case "locations":
 		entity := &models.Location{}
 
 		err := json.Unmarshal(ctx.PostBody(), &params)
@@ -203,8 +193,8 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
 
 		entity.SetParams(params)
 
-		storage.Db["location"][entity.Id] = entity
-	case strings.Contains(entityValue, "visit"):
+		storage.LocationDb[entity.Id] = entity
+	case "visits":
 		entity := &models.Visit{}
 
 		err := json.Unmarshal(ctx.PostBody(), &params)
@@ -219,10 +209,10 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
 		}
 
 		entity.SetParams(params)
-		storage.Db["visit"][entity.Id] = entity
+		storage.VisitDb[entity.Id] = entity
 
-		user := storage.Db["user"][entity.User].(*models.User)
-		location := storage.Db["location"][entity.Location].(*models.Location)
+		user := storage.UserDb[entity.User]
+		location := storage.LocationDb[entity.Location]
 
 		entity.User_model = user
 		entity.Location_model = location
