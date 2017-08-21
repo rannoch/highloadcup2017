@@ -63,49 +63,26 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 	visits := []models.Visit{}
 
 	for _, visit := range user.Visits {
+		if fromDate > 0 && visit.Visited_at < int32(fromDate) {
+			continue
+		}
+		if toDate > 0 && visit.Visited_at > int32(toDate) {
+			continue
+		}
+		if len(country) > 0 && visit.Location_model.Country != country {
+			continue
+		}
+
+		if toDistance > 0 && visit.Location_model.Distance >= int32(toDistance) {
+			continue
+		}
+
 		visits = append(visits, *visit)
 	}
 
-	if fromDate > 0 {
-		for i := len(visits) - 1; i >= 0; i -- {
-			visit := visits[i]
-			if visit.Visited_at < int32(fromDate) {
-				visits = append(visits[:i], visits[i+1:]...)
-			}
-		}
-	}
-
-	if toDate > 0 {
-		for i := len(visits) - 1; i >= 0; i -- {
-			visit := visits[i]
-			if visit.Visited_at > int32(toDate) {
-				visits = append(visits[:i], visits[i+1:]...)
-			}
-		}
-	}
-
-	if len(country) > 0 {
-		for i := len(visits) - 1; i >= 0; i -- {
-			visit := visits[i]
-			if visit.Location_model.Country != country {
-				visits = append(visits[:i], visits[i+1:]...)
-			}
-		}
-	}
-
-	if toDistance > 0 {
-		for i := len(visits) - 1; i >= 0; i -- {
-			visit := visits[i]
-			if visit.Location_model.Distance >= int32(toDistance) {
-				visits = append(visits[:i], visits[i+1:]...)
-			}
-		}
-	}
-
-	visitsResponse := []interface{}{}
-
 	sort.Sort(models.VisitByDateAsc(visits))
 
+	visitsResponse := []interface{}{}
 	for _, visit := range visits {
 		v := map[string]interface{}{
 			"mark":       visit.Mark,
@@ -118,7 +95,7 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 
 	response, err := json.Marshal(map[string]interface{}{"visits": visitsResponse})
 	if err != nil {
-		ctx.Error("Unsupported path", fasthttp.StatusNotFound)
+		ctx.Error("", fasthttp.StatusNotFound)
 		return
 	}
 

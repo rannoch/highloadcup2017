@@ -71,64 +71,34 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	location := l.(*models.Location)
-	visits := []models.Visit{}
-
-	for _, visit := range location.Visits {
-		visits = append(visits, *visit)
-	}
-
-	if fromDate > 0 {
-		for i := len(visits) - 1; i >= 0; i -- {
-			visit := visits[i]
-			if visit.Visited_at < int32(fromDate) {
-				visits = append(visits[:i], visits[i+1:]...)
-			}
-		}
-	}
-
-	if toDate > 0 {
-		for i := len(visits) - 1; i >= 0; i -- {
-			visit := visits[i]
-			if visit.Visited_at > int32(toDate) {
-				visits = append(visits[:i], visits[i+1:]...)
-			}
-		}
-	}
-
-	if fromAge > 0 {
-		for i := len(visits) - 1; i >= 0; i -- {
-			visit := visits[i]
-			if visit.User_model.Birth_date >= int32(time.Now().AddDate(-fromAge, 0, 0).Unix()) {
-				visits = append(visits[:i], visits[i+1:]...)
-			}
-		}
-	}
-
-	if toAge > 0 {
-		for i := len(visits) - 1; i >= 0; i -- {
-			visit := visits[i]
-			if visit.User_model.Birth_date <= int32(time.Now().AddDate(-toAge, 0, 0).Unix()) {
-				visits = append(visits[:i], visits[i+1:]...)
-			}
-		}
-	}
-
-	if len(gender) > 0 {
-		for i := len(visits) - 1; i >= 0; i -- {
-			visit := visits[i]
-			if visit.User_model.Gender != gender {
-				visits = append(visits[:i], visits[i+1:]...)
-			}
-		}
-	}
 
 	var marksSum int32 = 0
-	for _, visit := range visits {
+	var markCount int32 = 0
+
+	for i := len(location.Visits) - 1; i >= 0; i -- {
+		visit := location.Visits[i]
+		if fromDate > 0 && visit.Visited_at < int32(fromDate) {
+			continue
+		}
+		if toDate > 0 && visit.Visited_at > int32(toDate) {
+			continue
+		}
+		if fromAge > 0 && visit.User_model.Birth_date >= int32(time.Now().AddDate(-fromAge, 0, 0).Unix()) {
+			continue
+		}
+		if toAge > 0 && visit.User_model.Birth_date <= int32(time.Now().AddDate(-toAge, 0, 0).Unix()) {
+			continue
+		}
+		if len(gender) > 0 && visit.User_model.Gender != gender {
+			continue
+		}
+
 		marksSum += visit.Mark
+		markCount++
 	}
 
-	if len(visits) > 0 {
-		avg = float32(marksSum) / float32(len(visits))
+	if markCount > 0 {
+		avg = float32(marksSum) / float32(markCount)
 	}
 
 	response, err := json.Marshal(map[string]interface{}{"avg": models.FloatPrecision5(avg) })
