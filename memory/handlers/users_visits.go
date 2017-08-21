@@ -5,6 +5,7 @@ import (
 	"github.com/rannoch/highloadcup2017/memory/storage"
 	"github.com/rannoch/highloadcup2017/memory/models"
 	"fmt"
+	"bytes"
 )
 
 func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
@@ -85,5 +86,10 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 		visitsResponse = visitsResponse[:len(visitsResponse) - 1]
 	}
 
-	ctx.SetBody([]byte("{\"visits\": [" + visitsResponse + "]}"))
+	buffer := bufPool.Get().(*bytes.Buffer)
+	buffer.Reset()
+	buffer.Write([]byte("{\"visits\": [" + visitsResponse + "]}"))
+
+	ctx.Write(buffer.Bytes())
+	bufPool.Put(buffer)
 }

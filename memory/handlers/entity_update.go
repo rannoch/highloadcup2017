@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"github.com/antonholmquist/jason"
 	"sort"
+	"bytes"
 )
 
 func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
@@ -144,7 +145,12 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 		}
 	}
 
-	ctx.SetBody([]byte("{}"))
+	buffer := bufPool.Get().(*bytes.Buffer)
+	buffer.Reset()
+	buffer.Write([]byte("{}"))
+
+	ctx.Write(buffer.Bytes())
+	bufPool.Put(buffer)
 }
 
 func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
@@ -236,5 +242,10 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
 		sort.Sort(models.VisitByDateAsc(user.Visits))
 	}
 
-	ctx.SetBody([]byte("{}"))
+	buffer := bufPool.Get().(*bytes.Buffer)
+	buffer.Reset()
+	buffer.Write([]byte("{}"))
+
+	ctx.Write(buffer.Bytes())
+	bufPool.Put(buffer)
 }

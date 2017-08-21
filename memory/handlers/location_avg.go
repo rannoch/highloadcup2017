@@ -5,6 +5,7 @@ import (
 	"github.com/rannoch/highloadcup2017/memory/storage"
 	"time"
 	"fmt"
+	"bytes"
 )
 
 func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
@@ -98,5 +99,12 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 		avg = float32(marksSum) / float32(markCount)
 	}
 
-	ctx.SetBody([]byte(fmt.Sprintf("{\"avg\" : %.5f}", avg)))
+	//ctx.SetBody([]byte(fmt.Sprintf("{\"avg\" : %.5f}", avg)))
+
+	buffer := bufPool.Get().(*bytes.Buffer)
+	buffer.Reset()
+	buffer.WriteString(fmt.Sprintf("{\"avg\" : %.5f}", avg))
+
+	ctx.Write(buffer.Bytes())
+	bufPool.Put(buffer)
 }

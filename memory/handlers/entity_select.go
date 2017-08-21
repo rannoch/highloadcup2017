@@ -7,9 +7,20 @@ import (
 	//"os"
 	//"log"
 	//"runtime/pprof"
+	"sync"
+	"bytes"
 )
 
 var cpuprofile = flag.String("cpuprofile", "/home/baska/projects/go/src/github.com/rannoch/highloadcup2017/memory/memory.prof", "write cpu profile to file")
+
+var bufPool = sync.Pool{
+	New: func() interface{} {
+		// The Pool's New function should generally only return pointer
+		// types, since a pointer can be put into the return interface
+		// value without an allocation:
+		return new(bytes.Buffer)
+	},
+}
 
 func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 	/*flag.Parse()
@@ -52,7 +63,12 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		ctx.SetBody(entity.GetBytes())
+		buffer := bufPool.Get().(*bytes.Buffer)
+		buffer.Reset()
+		buffer.Write(entity.GetBytes())
+
+		ctx.Write(buffer.Bytes())
+		bufPool.Put(buffer)
 	case "locations":
 		if id > storage.LocationCount {
 			ctx.Error("", fasthttp.StatusNotFound)
@@ -66,7 +82,12 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		ctx.SetBody(entity.GetBytes())
+		buffer := bufPool.Get().(*bytes.Buffer)
+		buffer.Reset()
+		buffer.Write(entity.GetBytes())
+
+		ctx.Write(buffer.Bytes())
+		bufPool.Put(buffer)
 	case "visits":
 		if id > storage.VisitCount {
 			ctx.Error("", fasthttp.StatusNotFound)
@@ -80,6 +101,11 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		ctx.SetBody(entity.GetBytes())
+		buffer := bufPool.Get().(*bytes.Buffer)
+		buffer.Reset()
+		buffer.Write(entity.GetBytes())
+
+		ctx.Write(buffer.Bytes())
+		bufPool.Put(buffer)
 	}
 }
