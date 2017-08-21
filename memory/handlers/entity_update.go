@@ -138,21 +138,9 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 
 		entity.SetParams(params)
 
-		visitedAtParam, ok := params["visited_at"]
+		_, ok = params["visited_at"]
 		if ok {
-			var visitedAt int32
-			switch userParam.(type) {
-			case int32:
-				visitedAt = visitedAtParam.(int32)
-			case float32:
-				visitedAt = int32(visitedAtParam.(float32))
-			case float64:
-				visitedAt = int32(visitedAtParam.(float64))
-			}
-
-			if visitedAt != entity.Visited_at {
-				sort.Sort(models.VisitByDateAsc(entity.User_model.Visits))
-			}
+			sort.Sort(models.VisitByDateAsc(entity.User_model.Visits))
 		}
 	}
 
