@@ -4,15 +4,16 @@ import (
 	"github.com/rannoch/highloadcup2017/util"
 	"reflect"
 	"strings"
+	"fmt"
 )
 
 type Location struct {
-	Id int32 `json:"id"`
-	Place string `json:"place"`
-	Country string `json:"country"`
-	City string `json:"city"`
+	Id       int32 `json:"id"`
+	Place    string `json:"place"`
+	Country  string `json:"country"`
+	City     string `json:"city"`
 	Distance int32 `json:"distance"`
-	Visits []*Visit `json:"-"`
+	Visits   []*Visit `json:"-"`
 }
 
 func (location *Location) HasForeignRelations() bool {
@@ -27,7 +28,7 @@ func (location *Location) GetId() int32 {
 	return location.Id
 }
 
-func (location *Location) GetFields(alias string) []string{
+func (location *Location) GetFields(alias string) []string {
 	return []string{"id", "place", "country", "city", "distance"}
 }
 
@@ -67,7 +68,7 @@ func (location *Location) SetParams(params map[string]interface{}) {
 	for param, value := range params {
 		field := locationValue.FieldByName(strings.Title(param))
 
-		switch field.Interface().(type){
+		switch field.Interface().(type) {
 		case int32:
 			switch value.(type) {
 			case int32:
@@ -81,4 +82,8 @@ func (location *Location) SetParams(params map[string]interface{}) {
 			field.SetString(value.(string))
 		}
 	}
+}
+
+func (location *Location) GetBytes() []byte {
+	return []byte(fmt.Sprintf("{\"id\":%d,\"place\":\"%s\",\"country\":\"%s\",\"city\":\"%s\",\"distance\":%d}", location.Id, location.Place, location.Country, location.City, location.Distance))
 }

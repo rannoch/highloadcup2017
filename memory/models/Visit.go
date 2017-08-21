@@ -4,6 +4,7 @@ import (
 	"github.com/rannoch/highloadcup2017/util"
 	"reflect"
 	"strings"
+	"fmt"
 )
 
 type Visit struct {
@@ -110,4 +111,8 @@ func (s VisitByDateAsc) Swap(i, j int) {
 }
 func (s VisitByDateAsc) Less(i, j int) bool {
 	return s[i].Visited_at < s[j].Visited_at
+}
+
+func (visit *Visit) GetBytes() []byte {
+	return []byte(fmt.Sprintf("{\"id\":%d,\"location\":%d,\"user\":%d,\"visited_at\":%d,\"mark\":%d}", visit.Id, visit.Location, visit.User, visit.Visited_at, visit.Mark))
 }

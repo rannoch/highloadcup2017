@@ -4,9 +4,9 @@ import (
 	"github.com/valyala/fasthttp"
 	"strconv"
 	"github.com/rannoch/highloadcup2017/memory/storage"
-	"encoding/json"
 	"github.com/rannoch/highloadcup2017/memory/models"
 	"sort"
+	"fmt"
 )
 
 func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
@@ -82,22 +82,15 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 
 	sort.Sort(models.VisitByDateAsc(visits))
 
-	visitsResponse := []interface{}{}
+
+	visitsResponse := ""
 	for _, visit := range visits {
-		v := map[string]interface{}{
-			"mark":       visit.Mark,
-			"visited_at": visit.Visited_at,
-			"place":      visit.Location_model.Place,
-		}
-
-		visitsResponse = append(visitsResponse, v)
+		visitsResponse += fmt.Sprintf("{\"mark\":%d,\"visited_at\":%d,\"place\":\"%s\"},", visit.Mark,visit.Visited_at,visit.Location_model.Place)
 	}
 
-	response, err := json.Marshal(map[string]interface{}{"visits": visitsResponse})
-	if err != nil {
-		ctx.Error("", fasthttp.StatusNotFound)
-		return
+	if len(visitsResponse) > 0 {
+		visitsResponse = visitsResponse[:len(visitsResponse) - 1]
 	}
 
-	ctx.SetBody(response)
+	ctx.SetBody([]byte("{\"visits\": [" + visitsResponse + "]}"))
 }

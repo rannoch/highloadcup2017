@@ -20,7 +20,6 @@ func main() {
 	storage.InitMemoryMap()
 	LoadData(os.Args[2])
 
-
 	router := fasthttprouter.New()
 	//router.POST("/:entity/new", entityNewHandler)
 	router.GET("/:entity/:id", handlers.EntitySelectHandler)

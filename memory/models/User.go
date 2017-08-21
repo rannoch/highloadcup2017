@@ -137,3 +137,10 @@ type FloatPrecision5 float32
 func (f FloatPrecision5) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("%.5f", f)), nil
 }
+
+func (user *User) GetBytes() []byte {
+	return []byte(fmt.Sprintf("{\"id\":%d,\"email\":\"%s\",\"first_name\":\"%s\",\"last_name\":\"%s\",\"gender\":\"%s\",\"birth_date\":%d}",
+		user.Id, user.Email, user.First_name, user.Last_name, user.Gender, user.Birth_date,
+	))
+}
+

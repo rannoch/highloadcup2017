@@ -5,8 +5,8 @@ import (
 	"github.com/rannoch/highloadcup2017/memory/storage"
 	"github.com/rannoch/highloadcup2017/memory/models"
 	"strconv"
-	"encoding/json"
 	"time"
+	"fmt"
 )
 
 func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
@@ -101,11 +101,5 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 		avg = float32(marksSum) / float32(markCount)
 	}
 
-	response, err := json.Marshal(map[string]interface{}{"avg": models.FloatPrecision5(avg) })
-	if err != nil {
-		ctx.Error("", fasthttp.StatusNotFound)
-		return
-	}
-
-	ctx.SetBody(response)
+	ctx.SetBody([]byte(fmt.Sprintf("{\"avg\" : %.5f}", avg)))
 }
