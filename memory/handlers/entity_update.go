@@ -6,6 +6,7 @@ import (
 	"github.com/rannoch/highloadcup2017/memory/models"
 	"encoding/json"
 	"github.com/antonholmquist/jason"
+	"sort"
 )
 
 func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
@@ -36,11 +37,12 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 
 	switch entityValue {
 	case "users":
-		entity, ok := storage.UserDb[id]
-		if !ok {
+		if id > storage.UserCount {
 			ctx.Error("", fasthttp.StatusNotFound)
 			return
 		}
+
+		entity := storage.UserDb[id]
 
 		if !entity.ValidateParams(params, "update") {
 			ctx.Error("", fasthttp.StatusBadRequest)
@@ -49,11 +51,12 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 
 		entity.SetParams(params)
 	case "locations":
-		entity, ok := storage.LocationDb[id]
-		if !ok {
+		if id > storage.LocationCount {
 			ctx.Error("", fasthttp.StatusNotFound)
 			return
 		}
+
+		entity := storage.LocationDb[id]
 
 		if !entity.ValidateParams(params, "update") {
 			ctx.Error("", fasthttp.StatusBadRequest)
@@ -62,11 +65,12 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 
 		entity.SetParams(params)
 	case "visits":
-		entity, ok := storage.VisitDb[id]
-		if !ok {
+		if id > storage.VisitCount {
 			ctx.Error("", fasthttp.StatusNotFound)
 			return
 		}
+
+		entity := storage.VisitDb[id]
 
 		if !entity.ValidateParams(params, "update") {
 			ctx.Error("", fasthttp.StatusBadRequest)
@@ -100,6 +104,7 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 			}
 			// добавляю в нового
 			userUpdated.Visits = append(userUpdated.Visits, entity)
+			sort.Sort(models.VisitByDateAsc(userUpdated.Visits))
 		}
 
 		locationParam, ok := params["location"]
@@ -132,6 +137,23 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 		}
 
 		entity.SetParams(params)
+
+		visitedAtParam, ok := params["visited_at"]
+		if ok {
+			var visitedAt int32
+			switch userParam.(type) {
+			case int32:
+				visitedAt = visitedAtParam.(int32)
+			case float32:
+				visitedAt = int32(visitedAtParam.(float32))
+			case float64:
+				visitedAt = int32(visitedAtParam.(float64))
+			}
+
+			if visitedAt != entity.Visited_at {
+				sort.Sort(models.VisitByDateAsc(entity.User_model.Visits))
+			}
+		}
 	}
 
 	ctx.SetBody([]byte("{}"))
@@ -177,6 +199,7 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
 		entity.SetParams(params)
 
 		storage.UserDb[entity.Id] = entity
+		storage.UserCount++
 	case "locations":
 		entity := &models.Location{}
 
@@ -194,6 +217,7 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
 		entity.SetParams(params)
 
 		storage.LocationDb[entity.Id] = entity
+		storage.LocationCount++
 	case "visits":
 		entity := &models.Visit{}
 
@@ -210,6 +234,7 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
 
 		entity.SetParams(params)
 		storage.VisitDb[entity.Id] = entity
+		storage.VisitCount++
 
 		user := storage.UserDb[entity.User]
 		location := storage.LocationDb[entity.Location]
@@ -219,6 +244,8 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
 
 		user.Visits = append(user.Visits, entity)
 		location.Visits = append(location.Visits, entity)
+
+		sort.Sort(models.VisitByDateAsc(user.Visits))
 	}
 
 	ctx.SetBody([]byte("{}"))

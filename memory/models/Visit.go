@@ -147,7 +147,7 @@ func (visit *Visit) SetParams(params map[string]interface{}) {
 
 }
 
-type VisitByDateAsc []Visit
+type VisitByDateAsc []*Visit
 
 func (s VisitByDateAsc) Len() int {
 	return len(s)

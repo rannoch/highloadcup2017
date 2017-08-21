@@ -4,7 +4,6 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/rannoch/highloadcup2017/memory/storage"
 	"github.com/rannoch/highloadcup2017/memory/models"
-	"sort"
 	"fmt"
 )
 
@@ -46,8 +45,13 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 
 	id, _ = ctx.UserValue("id").(int32)
 
-	user, exist := storage.UserDb[id]
-	if !exist {
+	if id > storage.UserCount {
+		ctx.Error("", fasthttp.StatusNotFound)
+		return
+	}
+
+	user := storage.UserDb[id]
+	if user == nil {
 		ctx.Error("", fasthttp.StatusNotFound)
 		return
 	}
@@ -71,9 +75,6 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 
 		visits = append(visits, *visit)
 	}
-
-	sort.Sort(models.VisitByDateAsc(visits))
-
 
 	visitsResponse := ""
 	for _, visit := range visits {

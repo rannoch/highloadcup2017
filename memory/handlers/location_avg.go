@@ -58,8 +58,13 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	location, exist := storage.LocationDb[id]
-	if !exist {
+	if id > storage.LocationCount {
+		ctx.Error("", fasthttp.StatusNotFound)
+		return
+	}
+
+	location := storage.LocationDb[id]
+	if location == nil {
 		ctx.Error("", fasthttp.StatusNotFound)
 		return
 	}

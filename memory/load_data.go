@@ -9,6 +9,7 @@ import (
 	"github.com/rannoch/highloadcup2017/memory/storage"
 	"time"
 	"sync"
+	"sort"
 )
 
 func LoadData(path string) (err error) {
@@ -23,21 +24,24 @@ func LoadData(path string) (err error) {
 
 	// dependencies
 	for _, visit := range storage.VisitDb {
-		user, ok := storage.UserDb[visit.User]
-
-		if ok {
-			visit.User_model = user
-
-			user.Visits = append(user.Visits, visit)
+		if visit == nil {
+			continue
 		}
 
-		location, ok := storage.LocationDb[visit.Location]
+		user := storage.UserDb[visit.User]
 
-		if ok {
-			visit.Location_model = location
+		visit.User_model = user
 
-			location.Visits = append(location.Visits, visit)
-		}
+		user.Visits = append(user.Visits, visit)
+
+		// сортировка заранее
+		sort.Sort(models.VisitByDateAsc(user.Visits))
+
+		location := storage.LocationDb[visit.Location]
+
+		visit.Location_model = location
+
+		location.Visits = append(location.Visits, visit)
 	}
 
 	wg.Wait()
@@ -70,6 +74,7 @@ func parseAndAppendFile(file string) () {
 
 			storage.UserDb[v.Id] = &c
 		}
+		storage.UserCount += int32(len(m["users"]))
 
 	case strings.Contains(file, "locations"):
 		var m = make(map[string][]models.Location)
@@ -84,6 +89,8 @@ func parseAndAppendFile(file string) () {
 
 			storage.LocationDb[v.Id] = &c
 		}
+		storage.LocationCount += int32(len(m["locations"]))
+
 	case strings.Contains(file, "visits"):
 		var m = make(map[string][]models.Visit)
 		err = json.Unmarshal(fileContent, &m)
@@ -97,6 +104,8 @@ func parseAndAppendFile(file string) () {
 
 			storage.VisitDb[v.Id] = &c
 		}
+
+		storage.VisitCount += int32(len(m["visits"]))
 	}
 
 	return

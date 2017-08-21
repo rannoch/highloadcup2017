@@ -40,6 +40,11 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 
 	switch entityValue {
 	case "users":
+		if id > storage.UserCount {
+			ctx.Error("", fasthttp.StatusNotFound)
+			return
+		}
+
 		entity := storage.UserDb[id]
 
 		if entity == nil {
@@ -49,6 +54,11 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 
 		ctx.SetBody(entity.GetBytes())
 	case "locations":
+		if id > storage.LocationCount {
+			ctx.Error("", fasthttp.StatusNotFound)
+			return
+		}
+
 		entity := storage.LocationDb[id]
 
 		if entity == nil {
@@ -58,6 +68,11 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 
 		ctx.SetBody(entity.GetBytes())
 	case "visits":
+		if id > storage.VisitCount {
+			ctx.Error("", fasthttp.StatusNotFound)
+			return
+		}
+
 		entity := storage.VisitDb[id]
 
 		if entity == nil {
