@@ -88,7 +88,7 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 
 	buffer := bufPool.Get().(*bytes.Buffer)
 	buffer.Reset()
-	buffer.Write([]byte("{\"visits\": [" + visitsResponse + "]}"))
+	buffer.WriteString("{\"visits\": [" + visitsResponse + "]}")
 
 	ctx.Write(buffer.Bytes())
 	bufPool.Put(buffer)
