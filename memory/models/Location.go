@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/rannoch/highloadcup2017/util"
+	"github.com/rannoch/highloadcup2017/mysql_server/util"
 	"fmt"
 	"encoding/json"
 )
@@ -101,4 +101,8 @@ func (location *Location) SetParams(params map[string]interface{}) {
 
 func (location *Location) GetBytes() []byte {
 	return []byte(fmt.Sprintf("{\"id\":%d,\"place\":\"%s\",\"country\":\"%s\",\"city\":\"%s\",\"distance\":%d}", location.Id, location.Place, location.Country, location.City, location.Distance))
+}
+
+func (location *Location) GetString() string {
+	return fmt.Sprintf("{\"id\":%d,\"place\":\"%s\",\"country\":\"%s\",\"city\":\"%s\",\"distance\":%d}", location.Id, location.Place, location.Country, location.City, location.Distance)
 }

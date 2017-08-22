@@ -6,7 +6,7 @@ import (
 	"database/sql/driver"
 	"strconv"
 	"fmt"
-	"github.com/rannoch/highloadcup2017/util"
+	"github.com/rannoch/highloadcup2017/mysql_server/util"
 )
 
 type User struct {
@@ -158,5 +158,11 @@ func (user *User) GetBytes() []byte {
 	return []byte(fmt.Sprintf("{\"id\":%d,\"email\":\"%s\",\"first_name\":\"%s\",\"last_name\":\"%s\",\"gender\":\"%s\",\"birth_date\":%d}",
 		user.Id, user.Email, user.First_name, user.Last_name, user.Gender, user.Birth_date,
 	))
+}
+
+func (user *User) GetString() string {
+	return fmt.Sprintf("{\"id\":%d,\"email\":\"%s\",\"first_name\":\"%s\",\"last_name\":\"%s\",\"gender\":\"%s\",\"birth_date\":%d}",
+		user.Id, user.Email, user.First_name, user.Last_name, user.Gender, user.Birth_date,
+	)
 }
 

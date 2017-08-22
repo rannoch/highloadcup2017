@@ -4,9 +4,9 @@ import (
 	"io/ioutil"
 	"fmt"
 	"strings"
-	"github.com/rannoch/highloadcup2017/models"
+	"github.com/rannoch/highloadcup2017/mysql_server/modelsserver/models"
 	"encoding/json"
-	"github.com/rannoch/highloadcup2017/storage"
+	"github.com/rannoch/highloadcup2017/mysql_server/storageerver/storage"
 	"time"
 	"sync"
 )

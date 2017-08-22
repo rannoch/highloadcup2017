@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/rannoch/highloadcup2017/util"
+	"github.com/rannoch/highloadcup2017/mysql_server/util"
 	"reflect"
 	"strings"
 )

@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/rannoch/highloadcup2017/util"
+	"github.com/rannoch/highloadcup2017/mysql_server/util"
 	"fmt"
 	"encoding/json"
 )
@@ -161,4 +161,8 @@ func (s VisitByDateAsc) Less(i, j int) bool {
 
 func (visit *Visit) GetBytes() []byte {
 	return []byte(fmt.Sprintf("{\"id\":%d,\"location\":%d,\"user\":%d,\"visited_at\":%d,\"mark\":%d}", visit.Id, visit.Location, visit.User, visit.Visited_at, visit.Mark))
+}
+
+func (visit *Visit) GetString() string {
+	return fmt.Sprintf("{\"id\":%d,\"location\":%d,\"user\":%d,\"visited_at\":%d,\"mark\":%d}", visit.Id, visit.Location, visit.User, visit.Visited_at, visit.Mark)
 }

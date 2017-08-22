@@ -75,10 +75,10 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 
 	for i := len(location.Visits) - 1; i >= 0; i -- {
 		visit := location.Visits[i]
-		if fromDate > 0 && visit.Visited_at < int32(fromDate) {
+		if fromDate > 0 && visit.Visited_at <= int32(fromDate) {
 			continue
 		}
-		if toDate > 0 && visit.Visited_at > int32(toDate) {
+		if toDate > 0 && visit.Visited_at >= int32(toDate) {
 			continue
 		}
 		if fromAge > 0 && visit.User_model.Birth_date >= int32(time.Now().AddDate(-fromAge, 0, 0).Unix()) {

@@ -2,18 +2,18 @@ package handlers
 
 import (
 	"github.com/valyala/fasthttp"
-	"github.com/rannoch/highloadcup2017/storage"
-	"github.com/rannoch/highloadcup2017/models"
 	"strconv"
+	"github.com/rannoch/highloadcup2017/mysql_server/storage"
 	"database/sql"
 	"encoding/json"
-	"time"
+	"github.com/rannoch/highloadcup2017/mysql_server/models"
 )
 
-func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
+func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
-	var id, fromDate, toDate, fromAge, toAge int
+	var id int
+	var fromDate, toDate, toDistance int
 	var err error
 
 	if ctx.QueryArgs().Has("fromDate") {
@@ -24,6 +24,7 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 			return
 		}
 	}
+
 	if ctx.QueryArgs().Has("toDate") {
 		toDate, err = ctx.QueryArgs().GetUint("toDate")
 
@@ -32,16 +33,9 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 			return
 		}
 	}
-	if ctx.QueryArgs().Has("fromAge") {
-		fromAge, err = ctx.QueryArgs().GetUint("fromAge")
 
-		if err != nil {
-			ctx.Error("", fasthttp.StatusBadRequest)
-			return
-		}
-	}
-	if ctx.QueryArgs().Has("toAge") {
-		toAge, err = ctx.QueryArgs().GetUint("toAge")
+	if ctx.QueryArgs().Has("toDistance") {
+		toDistance, err = ctx.QueryArgs().GetUint("toDistance")
 
 		if err != nil {
 			ctx.Error("", fasthttp.StatusBadRequest)
@@ -49,9 +43,9 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 		}
 	}
 
-	var gender = (string)(ctx.QueryArgs().Peek("gender"))
+	var country = (string)(ctx.QueryArgs().Peek("country"))
 
-	var avg float32 = 0
+	var visits []models.Visit = []models.Visit{}
 	var conditions []storage.Condition
 	var joins []storage.Join
 
@@ -62,21 +56,16 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	if gender != "" && !(gender == "m" || gender == "f") {
-		ctx.Error("", fasthttp.StatusBadRequest)
-		return
-	}
-
 	idCondition := storage.Condition{
-		Param:         "visit.location",
+		Param:         "user",
 		Value:         strconv.Itoa(id),
 		Operator:      "=",
 		JoinCondition: "and",
 	}
 	conditions = append(conditions, idCondition)
 
-	location := models.Location{}
-	err = storage.Db.SelectEntity(&location, []storage.Condition{
+	user := models.User{}
+	err = storage.Db.SelectEntity(&user, []storage.Condition{
 		{
 			Param:         "id",
 			Value:         strconv.Itoa(id),
@@ -108,53 +97,54 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 		})
 	}
 
-	if fromAge > 0 || toAge > 0 || len(gender) > 0 {
-		joins = append(joins, storage.Join{
-			Name: "user",
-			Type: "left",
-			Condition: storage.Condition{
-				Param:    "visit.user",
-				Value:    "user.id",
-				Operator: "=",
-			},
-		})
-	}
+	joins = append(joins, storage.Join{
+		Name: "location",
+		Type: "left",
+		Condition: storage.Condition{
+			Param:    "visit.location",
+			Value:    "location.id",
+			Operator: "=",
+		},
+	})
 
-	if fromAge > 0 {
+	if len(country) > 0 {
 		conditions = append(conditions, storage.Condition{
-			Param:         "user.birth_date ",
-			Value:         strconv.Itoa(int(time.Now().AddDate(-fromAge, 0, 0).Unix())),
-			Operator:      "<",
-			JoinCondition: "and",
-		})
-	}
-
-	if toAge > 0 {
-		conditions = append(conditions, storage.Condition{
-			Param:         "user.birth_date ",
-			Value:         strconv.Itoa(int(time.Now().AddDate(-toAge, 0, 0).Unix())),
-			Operator:      ">",
-			JoinCondition: "and",
-		})
-	}
-
-	if len(gender) > 0 {
-		conditions = append(conditions, storage.Condition{
-			Param:         "user.gender ",
-			Value:         "'" + gender + "'",
+			Param:         "country",
+			Value:         "'" + country + "'",
 			Operator:      "=",
 			JoinCondition: "and",
 		})
 	}
 
-	avg, err = storage.Db.GetAverage(&models.Visit{}, "mark", joins, conditions)
+	if toDistance > 0 {
+		conditions = append(conditions, storage.Condition{
+			Param:         "distance",
+			Value:         strconv.Itoa(toDistance),
+			Operator:      "<",
+			JoinCondition: "and",
+		})
+	}
+
+	err = storage.Db.SelectEntityMultiple(&visits, []string{}, joins, conditions, storage.Sort{Fields:[]string{"visited_at"}, Direction:"asc"})
 
 	if err == sql.ErrNoRows {
 		ctx.Error("Unsupported path", fasthttp.StatusNotFound)
 		return
 	}
 
-	response, err := json.Marshal(map[string]interface{}{"avg" : models.FloatPrecision5(avg) })
+	visitsResponse := []interface{}{}
+
+	for _, visit := range visits {
+		v := map[string]interface{}{
+			"mark":       visit.Mark,
+			"visited_at": visit.Visited_at,
+			"place":      visit.LocationChild.Place,
+		}
+
+		visitsResponse = append(visitsResponse, v)
+	}
+
+	response, err := json.Marshal(map[string]interface{}{"visits": visitsResponse})
 	if err != nil {
 		ctx.Error("Unsupported path", fasthttp.StatusNotFound)
 		return

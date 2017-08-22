@@ -103,7 +103,7 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 
 		buffer := bufPool.Get().(*bytes.Buffer)
 		buffer.Reset()
-		buffer.Write(entity.GetBytes())
+		buffer.WriteString(entity.GetString())
 
 		ctx.Write(buffer.Bytes())
 		bufPool.Put(buffer)

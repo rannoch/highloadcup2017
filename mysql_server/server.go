@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/valyala/fasthttp"
 	"github.com/buaazp/fasthttprouter"
-	"github.com/rannoch/highloadcup2017/storage"
-	"github.com/rannoch/highloadcup2017/handlers"
+	"github.com/rannoch/highloadcup2017/mysql_server/storage"
+	"github.com/rannoch/highloadcup2017/mysql_server/handlers"
 	"os"
 	"log"
 )

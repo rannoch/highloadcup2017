@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"github.com/valyala/fasthttp"
-	"github.com/rannoch/highloadcup2017/storage"
+	"github.com/rannoch/highloadcup2017/mysql_server/storage"
 	"strconv"
 	"strings"
-	"github.com/rannoch/highloadcup2017/models"
+	"github.com/rannoch/highloadcup2017/mysql_server/models"
 	"encoding/json"
 	"database/sql"
 )
