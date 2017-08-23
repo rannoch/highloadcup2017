@@ -10,6 +10,10 @@ var UserCount int32
 var LocationCount int32
 var VisitCount int32
 
+var UserBytesDb [300000][]byte
+var LocationBytesDb [300000][]byte
+var VisitBytesDb [2000000][]byte
+
 // todo later
 func InitMemoryMap() {
 	UserDb = [300000]*models.User{}

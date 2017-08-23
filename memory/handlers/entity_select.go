@@ -51,56 +51,38 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx, id int32, entityValue []byte)
 			return
 		}
 
-		entity := storage.UserDb[id]
+		//buffer := bufPool.Get().(*bytes.Buffer)
+		//buffer.Reset()
+		//buffer.Write(storage.UserBytesDb[id])
 
-		if entity == nil {
-			ctx.Error("", fasthttp.StatusNotFound)
-			return
-		}
-
-		buffer := bufPool.Get().(*bytes.Buffer)
-		buffer.Reset()
-		buffer.WriteString(entity.GetString())
-
-		ctx.Write(buffer.Bytes())
-		bufPool.Put(buffer)
+		//ctx.Write(storage.UserBytesDb[id])
+		ctx.SetBody(storage.UserBytesDb[id])
+		//bufPool.Put(buffer)
 	case bytes.Equal(entityValue, LocationsBytes):
 		if id > storage.LocationCount {
 			ctx.Error("", fasthttp.StatusNotFound)
 			return
 		}
 
-		entity := storage.LocationDb[id]
+		//buffer := bufPool.Get().(*bytes.Buffer)
+		//buffer.Reset()
+		//buffer.Write(storage.LocationBytesDb[id])
 
-		if entity == nil {
-			ctx.Error("", fasthttp.StatusNotFound)
-			return
-		}
-
-		buffer := bufPool.Get().(*bytes.Buffer)
-		buffer.Reset()
-		buffer.WriteString(entity.GetString())
-
-		ctx.Write(buffer.Bytes())
-		bufPool.Put(buffer)
+		//ctx.Write(storage.LocationBytesDb[id])
+		ctx.SetBody(storage.LocationBytesDb[id])
+		//bufPool.Put(buffer)
 	case bytes.Equal(entityValue, VisitsBytes):
 		if id > storage.VisitCount {
 			ctx.Error("", fasthttp.StatusNotFound)
 			return
 		}
 
-		entity := storage.VisitDb[id]
+		//buffer := bufPool.Get().(*bytes.Buffer)
+		//buffer.Reset()
+		//buffer.Write(storage.VisitBytesDb[id])
 
-		if entity == nil {
-			ctx.Error("", fasthttp.StatusNotFound)
-			return
-		}
-
-		buffer := bufPool.Get().(*bytes.Buffer)
-		buffer.Reset()
-		buffer.WriteString(entity.GetString())
-
-		ctx.Write(buffer.Bytes())
-		bufPool.Put(buffer)
+		//ctx.Write(storage.VisitBytesDb[id])
+		ctx.SetBody(storage.VisitBytesDb[id])
+		//bufPool.Put(buffer)
 	}
 }

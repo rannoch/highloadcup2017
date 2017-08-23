@@ -79,9 +79,9 @@ func main() {
 				return
 			}
 
-			id, err := strconv.Atoi(string(idValue))
+			id, err := strconv.Atoi(string(idValue[:]))
 
-			if err != nil {
+			if err != nil || id < 0{
 				ctx.Error("", fasthttp.StatusNotFound)
 				return
 			}
@@ -106,8 +106,8 @@ func main() {
 				return
 			}
 
-			id, err := strconv.Atoi(string(idValue))
-			if err != nil {
+			id, err := strconv.Atoi(string(idValue[:]))
+			if err != nil || id < 0{
 				ctx.Error("", fasthttp.StatusNotFound)
 				return
 			}

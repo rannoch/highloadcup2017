@@ -1,10 +1,7 @@
 package models
 
 import (
-	"time"
 	"encoding/json"
-	"database/sql/driver"
-	"strconv"
 	"fmt"
 	"github.com/rannoch/highloadcup2017/mysql_server/util"
 )
@@ -17,18 +14,6 @@ type User struct {
 	Gender     string `json:"gender"`
 	Birth_date int32 `json:"birth_date"`
 	Visits     []*Visit `json:"-"`
-}
-
-func (user *User) HasForeignRelations() bool {
-	return false
-}
-
-func (user *User) TableName() string {
-	return "user"
-}
-
-func (user *User) GetId() int32 {
-	return user.Id
 }
 
 func (user *User) GetFields(alias string) []string {
@@ -96,62 +81,6 @@ func (user *User) SetParams(params map[string]interface{}) {
 			user.Birth_date = int32(t)
 		}
 	}
-}
-
-func (user *User) GetValues() []interface{} {
-	return []interface{}{user.Id, user.Email, user.First_name, user.Last_name, user.Gender, user.Birth_date}
-}
-
-func (user *User) GetFieldPointers(with []string) []interface{} {
-	return []interface{}{&user.Id, &user.Email, &user.First_name, &user.Last_name, &user.Gender, &user.Birth_date}
-}
-
-type BaskaTime struct {
-	time.Time
-}
-
-func (baskaTime *BaskaTime) UnmarshalJSON(data []byte) error {
-	var timestamp int64
-	err := json.Unmarshal(data, &timestamp)
-	if err != nil {
-		return err
-	}
-
-	baskaTime.Time = time.Unix(0, 0)
-
-	baskaTime.Time = baskaTime.Add(time.Duration(timestamp) * time.Second)
-
-	return nil
-}
-
-func (baskaTime BaskaTime) MarshalJSON() ([]byte, error) {
-	//do your serializing here
-	//stamp := fmt.Sprintf("\"%s\"", baskaTime.Time.Format(time.RFC1123Z))
-
-	//stamp := baskaTime.Unix() - time.Unix(0,0).Unix()
-	return []byte(strconv.Itoa(int(baskaTime.Unix()))), nil
-}
-
-func (baskaTime *BaskaTime) Scan(value interface{}) error {
-	if value == nil {
-		return nil
-	}
-	v, ok := value.(time.Time)
-	if ok {
-		baskaTime.Time = v
-	}
-
-	return nil
-}
-
-func (baskaTime BaskaTime) Value() (driver.Value, error) {
-	return baskaTime.Time, nil
-}
-
-type FloatPrecision5 float32
-
-func (f FloatPrecision5) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("%.5f", f)), nil
 }
 
 func (user *User) GetBytes() []byte {

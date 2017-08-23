@@ -16,18 +16,6 @@ type Visit struct {
 	User_model     *User `json:"-" relation:"user"`
 }
 
-func (visit *Visit) HasForeignRelations() bool {
-	return true
-}
-
-func (visit *Visit) TableName() string {
-	return "visit"
-}
-
-func (visit *Visit) GetId() int32 {
-	return visit.Id
-}
-
 func (visit *Visit) GetFields(alias string) []string {
 	if len(alias) > 0 {
 		return []string{alias + ".id", alias + ".location", alias + ".user", alias + ".visited_at", alias + ".mark"}
@@ -56,26 +44,6 @@ func (visit *Visit) ValidateParams(params map[string]interface{}, scenario strin
 	}
 
 	return true
-}
-
-func (visit *Visit) GetValues() []interface{} {
-	return []interface{}{visit.Id, visit.Location, visit.User, visit.Visited_at, visit.Mark}
-}
-
-func (visit *Visit) GetFieldPointers(with []string) []interface{} {
-	fieldPointers := []interface{}{&visit.Id, &visit.Location, &visit.User, &visit.Visited_at, &visit.Mark}
-
-	for _, v := range with {
-		if v == "location" {
-			if visit.Location_model == nil {
-				visit.Location_model = &Location{}
-			}
-
-			fieldPointers = append(fieldPointers, visit.Location_model.GetFieldPointers([]string{})...)
-		}
-	}
-
-	return fieldPointers
 }
 
 func (visit *Visit) SetParams(params map[string]interface{}) {

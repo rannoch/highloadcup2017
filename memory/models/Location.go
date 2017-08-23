@@ -15,28 +15,8 @@ type Location struct {
 	Visits   []*Visit `json:"-"`
 }
 
-func (location *Location) HasForeignRelations() bool {
-	return false
-}
-
-func (location *Location) TableName() string {
-	return "location"
-}
-
-func (location *Location) GetId() int32 {
-	return location.Id
-}
-
 func (location *Location) GetFields(alias string) []string {
 	return []string{"id", "place", "country", "city", "distance"}
-}
-
-func (location *Location) GetValues() []interface{} {
-	return []interface{}{location.Id, location.Place, location.Country, location.City, location.Distance}
-}
-
-func (location *Location) GetFieldPointers(with []string) []interface{} {
-	return []interface{}{&location.Id, &location.Place, &location.Country, &location.City, &location.Distance}
 }
 
 func (location *Location) ValidateParams(params map[string]interface{}, scenario string) (result bool) {

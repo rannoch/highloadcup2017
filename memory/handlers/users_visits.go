@@ -3,8 +3,8 @@ package handlers
 import (
 	"github.com/valyala/fasthttp"
 	"github.com/rannoch/highloadcup2017/memory/storage"
-	"fmt"
 	"bytes"
+	"fmt"
 )
 
 func UsersVisitsHandler(ctx *fasthttp.RequestCtx, id int32) {
