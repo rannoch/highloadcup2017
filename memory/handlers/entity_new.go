@@ -5,7 +5,6 @@ import (
 	"github.com/antonholmquist/jason"
 	"encoding/json"
 	"sort"
-	"bytes"
 	"github.com/rannoch/highloadcup2017/memory/models"
 	"github.com/rannoch/highloadcup2017/memory/storage"
 )
@@ -94,11 +93,6 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx, entityValue string) {
 		sort.Sort(models.VisitByDateAsc(user.Visits))
 	}
 
-	buffer := bufPool.Get().(*bytes.Buffer)
-	buffer.Reset()
-	buffer.Write([]byte(`{}`))
-
-	ctx.Write(buffer.Bytes())
-	bufPool.Put(buffer)
+	ctx.SetBody(EmptyJson)
 }
 

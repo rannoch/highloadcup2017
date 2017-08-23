@@ -6,7 +6,6 @@ import (
 	//"os"
 	//"log"
 	//"runtime/pprof"
-	"sync"
 	"bytes"
 )
 var UsersNewBytes = []byte(`users/new`)
@@ -18,16 +17,7 @@ var LocationsBytes = []byte("locations")
 var VisitsBytes = []byte("visits")
 
 var AvgBytes = []byte("avg")
-
-
-var bufPool = sync.Pool{
-	New: func() interface{} {
-		// The Pool's New function should generally only return pointer
-		// types, since a pointer can be put into the return interface
-		// value without an allocation:
-		return new(bytes.Buffer)
-	},
-}
+var EmptyJson = []byte(`{}`)
 
 func EntitySelectHandler(ctx *fasthttp.RequestCtx, id int32, entityValue []byte) {
 	/*flag.Parse()

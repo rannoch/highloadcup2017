@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/valyala/fasthttp"
 	"github.com/rannoch/highloadcup2017/memory/storage"
-	"bytes"
 	"fmt"
 )
 
@@ -55,9 +54,7 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx, id int32) {
 
 	var country = (string)(args.Peek("country"))
 
-	buffer := bufPool.Get().(*bytes.Buffer)
-	buffer.Reset()
-	buffer.WriteString(`{"visits": [`)
+	ctx.WriteString(`{"visits": [`)
 
 	atLeastOneFound := false
 	for _, visit := range user.Visits {
@@ -76,15 +73,12 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx, id int32) {
 		}
 
 		if atLeastOneFound {
-			buffer.WriteString(`,`)
+			ctx.WriteString(`,`)
 		}
 
-		buffer.WriteString(fmt.Sprintf("{\"mark\":%d,\"visited_at\":%d,\"place\":\"%s\"}", visit.Mark,visit.Visited_at,visit.Location_model.Place))
+		ctx.WriteString(fmt.Sprintf("{\"mark\":%d,\"visited_at\":%d,\"place\":\"%s\"}", visit.Mark,visit.Visited_at,visit.Location_model.Place))
 		atLeastOneFound = true
 	}
 
-	buffer.WriteString(`]}`)
-
-	ctx.Write(buffer.Bytes())
-	bufPool.Put(buffer)
+	ctx.WriteString(`]}`)
 }

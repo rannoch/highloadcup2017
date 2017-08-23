@@ -155,10 +155,5 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx, id int32, entityValue []byte)
 		}
 	}
 
-	buffer := bufPool.Get().(*bytes.Buffer)
-	buffer.Reset()
-	buffer.WriteString(`{}`)
-
-	ctx.Write(buffer.Bytes())
-	bufPool.Put(buffer)
+	ctx.SetBody(EmptyJson)
 }
