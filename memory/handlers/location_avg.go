@@ -8,11 +8,10 @@ import (
 	"bytes"
 )
 
-func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
+func LocationsAvgHandler(ctx *fasthttp.RequestCtx, id int32) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
 	var fromDate, toDate, fromAge, toAge int
-	var id int32 = ctx.UserValue("id").(int32)
 	var err error
 
 	if id > storage.LocationCount {

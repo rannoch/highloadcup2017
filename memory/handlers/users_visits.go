@@ -7,14 +7,11 @@ import (
 	"bytes"
 )
 
-func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
+func UsersVisitsHandler(ctx *fasthttp.RequestCtx, id int32) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
-	var id int32
 	var fromDate, toDate, toDistance int
 	var err error
-
-	id, _ = ctx.UserValue("id").(int32)
 
 	if id > storage.UserCount {
 		ctx.Error("", fasthttp.StatusNotFound)
@@ -60,7 +57,7 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 
 	buffer := bufPool.Get().(*bytes.Buffer)
 	buffer.Reset()
-	buffer.Write([]byte(`{"visits": [`))
+	buffer.WriteString(`{"visits": [`)
 
 	atLeastOneFound := false
 	for _, visit := range user.Visits {
@@ -79,14 +76,14 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 		}
 
 		if atLeastOneFound {
-			buffer.Write([]byte(`,`))
+			buffer.WriteString(`,`)
 		}
 
 		buffer.WriteString(fmt.Sprintf("{\"mark\":%d,\"visited_at\":%d,\"place\":\"%s\"}", visit.Mark,visit.Visited_at,visit.Location_model.Place))
 		atLeastOneFound = true
 	}
 
-	buffer.Write([]byte(`]}`))
+	buffer.WriteString(`]}`)
 
 	ctx.Write(buffer.Bytes())
 	bufPool.Put(buffer)

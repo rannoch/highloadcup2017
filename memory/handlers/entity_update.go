@@ -9,23 +9,13 @@ import (
 	"bytes"
 )
 
-func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
+func EntityUpdateHandler(ctx *fasthttp.RequestCtx, id int32, entityValue []byte) {
 	ctx.SetContentType("application/json;charset=utf-8")
-
-	var id int32
 
 	defer ctx.SetConnectionClose()
 
-	id, _ = ctx.UserValue("id").(int32)
-
-	entityValue, ok := ctx.UserValue("entity").(string)
-	if !ok {
-		ctx.Error("", fasthttp.StatusBadRequest)
-		return
-	}
-
-	switch entityValue {
-	case "users":
+	switch {
+	case bytes.Equal(entityValue, UsersBytes):
 		if id > storage.UserCount {
 			ctx.Error("", fasthttp.StatusNotFound)
 			return
@@ -48,7 +38,7 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 		}
 
 		entity.SetParams(params)
-	case "locations":
+	case bytes.Equal(entityValue, LocationsBytes):
 		if id > storage.LocationCount {
 			ctx.Error("", fasthttp.StatusNotFound)
 			return
@@ -71,7 +61,7 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 		}
 
 		entity.SetParams(params)
-	case "visits":
+	case bytes.Equal(entityValue, VisitsBytes):
 		if id > storage.VisitCount {
 			ctx.Error("", fasthttp.StatusNotFound)
 			return
@@ -162,7 +152,7 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 
 	buffer := bufPool.Get().(*bytes.Buffer)
 	buffer.Reset()
-	buffer.Write([]byte(`{}`))
+	buffer.WriteString(`{}`)
 
 	ctx.Write(buffer.Bytes())
 	bufPool.Put(buffer)

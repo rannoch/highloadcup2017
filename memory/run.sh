@@ -2,4 +2,4 @@
 
 unzip -j /tmp/data/data.zip '*.json' -d data
 
-./go/bin/highloadcup2017 80 data
+./go/bin/memory 80 data

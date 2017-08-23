@@ -3,15 +3,22 @@ package handlers
 import (
 	"github.com/valyala/fasthttp"
 	"github.com/rannoch/highloadcup2017/memory/storage"
-	"flag"
 	//"os"
 	//"log"
 	//"runtime/pprof"
 	"sync"
 	"bytes"
 )
+var UsersNewBytes = []byte(`users/new`)
+var LocationsNewBytes = []byte("locations/new")
+var VisitsNewBytes = []byte("visits/new")
 
-var cpuprofile = flag.String("cpuprofile", "/home/baska/projects/go/src/github.com/rannoch/highloadcup2017/memory/memory.prof", "write cpu profile to file")
+var UsersBytes = []byte("users")
+var LocationsBytes = []byte("locations")
+var VisitsBytes = []byte("visits")
+
+var AvgBytes = []byte("avg")
+
 
 var bufPool = sync.Pool{
 	New: func() interface{} {
@@ -22,7 +29,7 @@ var bufPool = sync.Pool{
 	},
 }
 
-func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
+func EntitySelectHandler(ctx *fasthttp.RequestCtx, id int32, entityValue []byte) {
 	/*flag.Parse()
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
@@ -37,20 +44,8 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 
 	ctx.SetContentType("application/json;charset=utf-8")
 
-	var entityValue string
-
-	entityValue, ok := ctx.UserValue("entity").(string)
-
-	var id int32
-	id, _ = ctx.UserValue("id").(int32)
-
-	if !ok || !(entityValue == "users" || entityValue == "locations" || entityValue == "visits"){
-		ctx.Error("", fasthttp.StatusNotFound)
-		return
-	}
-
-	switch entityValue {
-	case "users":
+	switch {
+	case bytes.Equal(entityValue, UsersBytes):
 		if id > storage.UserCount {
 			ctx.Error("", fasthttp.StatusNotFound)
 			return
@@ -69,7 +64,7 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 
 		ctx.Write(buffer.Bytes())
 		bufPool.Put(buffer)
-	case "locations":
+	case bytes.Equal(entityValue, LocationsBytes):
 		if id > storage.LocationCount {
 			ctx.Error("", fasthttp.StatusNotFound)
 			return
@@ -88,7 +83,7 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 
 		ctx.Write(buffer.Bytes())
 		bufPool.Put(buffer)
-	case "visits":
+	case bytes.Equal(entityValue, VisitsBytes):
 		if id > storage.VisitCount {
 			ctx.Error("", fasthttp.StatusNotFound)
 			return

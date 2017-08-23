@@ -7,9 +7,15 @@ import (
 	"os"
 	"log"
 	"github.com/rannoch/highloadcup2017/memory/storage"
-	"strings"
+	"flag"
+	//"runtime/pprof"
+	//"time"
+	"bytes"
+	//"fmt"
 	"strconv"
 )
+
+//var cpuprofile = flag.String("cpuprofile", "/home/baska/projects/go/src/github.com/rannoch/highloadcup2017/memory/memory.prof", "write cpu profile to file")
 
 func main() {
 	if len(os.Args) < 3 {
@@ -21,28 +27,46 @@ func main() {
 	storage.InitMemoryMap()
 	LoadData(os.Args[2])
 
+	//flag.Parse()
+	/*if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		pprof.StartCPUProfile(f)
+
+		go func() {
+			select {
+			case <-time.After(30 * time.Second):
+				pprof.StopCPUProfile()
+				f.Close()
+			}
+		}()
+		//defer f.Close()
+		//defer pprof.StopCPUProfile()
+	}*/
+
 	m := func(ctx *fasthttp.RequestCtx) {
-		path := string(ctx.Path())
+		path := ctx.Path()
 		path = path[1:]
 
 		if ctx.IsPost() {
 			//POST /<entity>/new на создание
 
-			if path == "users/new" || path == "locations/new" || path == "visits/new" {
-				switch path {
-				case "users/new":
-					ctx.SetUserValue("entity", "users")
-				case "locations/new":
-					ctx.SetUserValue("entity", "locations")
-				case "visits/new":
-					ctx.SetUserValue("entity", "visits")
+			if bytes.Equal(path, handlers.UsersNewBytes) || bytes.Equal(path, handlers.LocationsNewBytes) || bytes.Equal(path, handlers.VisitsNewBytes) {
+				switch {
+				case bytes.Equal(path, handlers.UsersNewBytes):
+					handlers.EntitityNewHandler(ctx, "users")
+				case bytes.Equal(path, handlers.LocationsNewBytes):
+					handlers.EntitityNewHandler(ctx, "locations")
+				case bytes.Equal(path, handlers.VisitsNewBytes):
+					handlers.EntitityNewHandler(ctx, "visits")
 				}
-
-				handlers.EntitityNewHandler(ctx)
 				return
 			}
 
-			params := strings.Split(path, "/")
+			params := bytes.Split(path, []byte("/"))
 			if len(params) != 2 {
 				ctx.Error("", fasthttp.StatusBadRequest)
 				return
@@ -51,27 +75,25 @@ func main() {
 			entity := params[0]
 			idValue := params[1]
 
-			if !(entity == "users" || entity == "locations" || entity == "visits") {
+			if !(bytes.Equal(entity, handlers.UsersBytes) || bytes.Equal(entity, handlers.LocationsBytes) || bytes.Equal(entity, handlers.VisitsBytes)) {
 				ctx.Error("", fasthttp.StatusBadRequest)
 				return
 			}
 
-			id, err := strconv.Atoi(idValue)
+			id, err := strconv.Atoi(string(idValue))
+
 			if err != nil {
 				ctx.Error("", fasthttp.StatusNotFound)
 				return
 			}
 
-			ctx.SetUserValue("id", int32(id))
-			ctx.SetUserValue("entity", entity)
-
 			//POST /<entity>/<id> на обновление
-			handlers.EntityUpdateHandler(ctx)
+			handlers.EntityUpdateHandler(ctx, int32(id), entity)
 			return
 		}
 
 		if ctx.IsGet() {
-			params := strings.Split(path, "/")
+			params := bytes.Split(path, []byte("/"))
 			if len(params) < 2 || len(params) > 3 {
 				ctx.Error("", fasthttp.StatusBadRequest)
 				return
@@ -80,34 +102,32 @@ func main() {
 			entity := params[0]
 			idValue := params[1]
 
-			if !(entity == "users" || entity == "locations" || entity == "visits") {
+			if !(bytes.Equal(entity, handlers.UsersBytes) || bytes.Equal(entity, handlers.LocationsBytes) || bytes.Equal(entity, handlers.VisitsBytes)) {
 				ctx.Error("", fasthttp.StatusNotFound)
 				return
 			}
 
-			id, err := strconv.Atoi(idValue)
+			id, err := strconv.Atoi(string(idValue))
 			if err != nil {
 				ctx.Error("", fasthttp.StatusNotFound)
 				return
 			}
 
-			ctx.SetUserValue("id", int32(id))
-			ctx.SetUserValue("entity", entity)
-
 			if len(params) == 3 {
-				if entity == "users" && params[2] == "visits" {
-					handlers.UsersVisitsHandler(ctx)
+				if bytes.Equal(entity, handlers.UsersBytes) && bytes.Equal(params[2], handlers.VisitsBytes) {
+					handlers.UsersVisitsHandler(ctx, int32(id))
 					return
 				}
-				if entity == "locations" && params[2] == "avg" {
-					handlers.LocationsAvgHandler(ctx)
+				if bytes.Equal(entity, handlers.LocationsBytes) && bytes.Equal(params[2], handlers.AvgBytes) {
+					handlers.LocationsAvgHandler(ctx, int32(id))
 					return
 				}
+
 				ctx.Error("", fasthttp.StatusBadRequest)
 				return
 			}
 
-			handlers.EntitySelectHandler(ctx)
+			handlers.EntitySelectHandler(ctx, int32(id), entity)
 			return
 		}
 

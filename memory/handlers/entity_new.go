@@ -10,20 +10,12 @@ import (
 	"github.com/rannoch/highloadcup2017/memory/storage"
 )
 
-func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
+func EntitityNewHandler(ctx *fasthttp.RequestCtx, entityValue string) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
-	var entityValue string
 	var params map[string]interface{}
 
 	defer ctx.SetConnectionClose()
-
-	entityValue, ok := ctx.UserValue("entity").(string)
-
-	if !ok {
-		ctx.Error("", fasthttp.StatusBadRequest)
-		return
-	}
 
 	switch entityValue{
 	case "users":
