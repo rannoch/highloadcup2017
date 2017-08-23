@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/valyala/fasthttp"
 	"github.com/rannoch/highloadcup2017/memory/storage"
-	"github.com/rannoch/highloadcup2017/memory/models"
 	"fmt"
 	"bytes"
 )
@@ -14,35 +13,6 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 	var id int32
 	var fromDate, toDate, toDistance int
 	var err error
-
-	if ctx.QueryArgs().Has("fromDate") {
-		fromDate, err = ctx.QueryArgs().GetUint("fromDate")
-
-		if err != nil {
-			ctx.Error("", fasthttp.StatusBadRequest)
-			return
-		}
-	}
-
-	if ctx.QueryArgs().Has("toDate") {
-		toDate, err = ctx.QueryArgs().GetUint("toDate")
-
-		if err != nil {
-			ctx.Error("", fasthttp.StatusBadRequest)
-			return
-		}
-	}
-
-	if ctx.QueryArgs().Has("toDistance") {
-		toDistance, err = ctx.QueryArgs().GetUint("toDistance")
-
-		if err != nil {
-			ctx.Error("", fasthttp.StatusBadRequest)
-			return
-		}
-	}
-
-	var country = (string)(ctx.QueryArgs().Peek("country"))
 
 	id, _ = ctx.UserValue("id").(int32)
 
@@ -57,8 +27,42 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	visits := []models.Visit{}
+	args := ctx.QueryArgs()
 
+	if args.Has("fromDate") {
+		fromDate, err = args.GetUint("fromDate")
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+	}
+
+	if args.Has("toDate") {
+		toDate, err = args.GetUint("toDate")
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+	}
+
+	if args.Has("toDistance") {
+		toDistance, err = args.GetUint("toDistance")
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+	}
+
+	var country = (string)(args.Peek("country"))
+
+	buffer := bufPool.Get().(*bytes.Buffer)
+	buffer.Reset()
+	buffer.Write([]byte(`{"visits": [`))
+
+	atLeastOneFound := false
 	for _, visit := range user.Visits {
 		if fromDate > 0 && visit.Visited_at < int32(fromDate) {
 			continue
@@ -74,21 +78,15 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx) {
 			continue
 		}
 
-		visits = append(visits, *visit)
+		if atLeastOneFound {
+			buffer.Write([]byte(`,`))
+		}
+
+		buffer.WriteString(fmt.Sprintf("{\"mark\":%d,\"visited_at\":%d,\"place\":\"%s\"}", visit.Mark,visit.Visited_at,visit.Location_model.Place))
+		atLeastOneFound = true
 	}
 
-	visitsResponse := ""
-	for _, visit := range visits {
-		visitsResponse += fmt.Sprintf("{\"mark\":%d,\"visited_at\":%d,\"place\":\"%s\"},", visit.Mark,visit.Visited_at,visit.Location_model.Place)
-	}
-
-	if len(visitsResponse) > 0 {
-		visitsResponse = visitsResponse[:len(visitsResponse) - 1]
-	}
-
-	buffer := bufPool.Get().(*bytes.Buffer)
-	buffer.Reset()
-	buffer.WriteString("{\"visits\": [" + visitsResponse + "]}")
+	buffer.Write([]byte(`]}`))
 
 	ctx.Write(buffer.Bytes())
 	bufPool.Put(buffer)

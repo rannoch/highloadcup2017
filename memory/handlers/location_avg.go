@@ -12,52 +12,8 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
 	var fromDate, toDate, fromAge, toAge int
-	var id int32
+	var id int32 = ctx.UserValue("id").(int32)
 	var err error
-
-	if ctx.QueryArgs().Has("fromDate") {
-		fromDate, err = ctx.QueryArgs().GetUint("fromDate")
-
-		if err != nil {
-			ctx.Error("", fasthttp.StatusBadRequest)
-			return
-		}
-	}
-	if ctx.QueryArgs().Has("toDate") {
-		toDate, err = ctx.QueryArgs().GetUint("toDate")
-
-		if err != nil {
-			ctx.Error("", fasthttp.StatusBadRequest)
-			return
-		}
-	}
-	if ctx.QueryArgs().Has("fromAge") {
-		fromAge, err = ctx.QueryArgs().GetUint("fromAge")
-
-		if err != nil {
-			ctx.Error("", fasthttp.StatusBadRequest)
-			return
-		}
-	}
-	if ctx.QueryArgs().Has("toAge") {
-		toAge, err = ctx.QueryArgs().GetUint("toAge")
-
-		if err != nil {
-			ctx.Error("", fasthttp.StatusBadRequest)
-			return
-		}
-	}
-
-	var gender = (string)(ctx.QueryArgs().Peek("gender"))
-
-	var avg float32 = 0
-
-	id, _ = ctx.UserValue("id").(int32)
-
-	if gender != "" && !(gender == "m" || gender == "f") {
-		ctx.Error("", fasthttp.StatusBadRequest)
-		return
-	}
 
 	if id > storage.LocationCount {
 		ctx.Error("", fasthttp.StatusNotFound)
@@ -69,6 +25,50 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx) {
 		ctx.Error("", fasthttp.StatusNotFound)
 		return
 	}
+
+	args := ctx.QueryArgs()
+
+	if args.Has("fromDate") {
+		fromDate, err = args.GetUint("fromDate")
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+	}
+	if args.Has("toDate") {
+		toDate, err = args.GetUint("toDate")
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+	}
+	if args.Has("fromAge") {
+		fromAge, err = args.GetUint("fromAge")
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+	}
+	if args.Has("toAge") {
+		toAge, err = args.GetUint("toAge")
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+	}
+
+	var gender = (string)(args.Peek("gender"))
+
+	if gender != "" && !(gender == "m" || gender == "f") {
+		ctx.Error("", fasthttp.StatusBadRequest)
+		return
+	}
+
+	var avg float32 = 0
 
 	var marksSum int32 = 0
 	var markCount int32 = 0

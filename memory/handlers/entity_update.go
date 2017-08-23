@@ -13,24 +13,13 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
 	var id int32
-	var entityValue string
-	var params map[string]interface{}
 
 	defer ctx.SetConnectionClose()
 
 	id, _ = ctx.UserValue("id").(int32)
 
 	entityValue, ok := ctx.UserValue("entity").(string)
-
 	if !ok {
-		ctx.Error("", fasthttp.StatusBadRequest)
-		return
-	}
-
-	// check params
-	err := json.Unmarshal(ctx.PostBody(), &params)
-
-	if err != nil {
 		ctx.Error("", fasthttp.StatusBadRequest)
 		return
 	}
@@ -39,6 +28,15 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 	case "users":
 		if id > storage.UserCount {
 			ctx.Error("", fasthttp.StatusNotFound)
+			return
+		}
+
+		// check params
+		var params map[string]interface{}
+		err := json.Unmarshal(ctx.PostBody(), &params)
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
 			return
 		}
 
@@ -56,6 +54,15 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
+		// check params
+		var params map[string]interface{}
+		err := json.Unmarshal(ctx.PostBody(), &params)
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
+			return
+		}
+
 		entity := storage.LocationDb[id]
 
 		if !entity.ValidateParams(params, "update") {
@@ -67,6 +74,15 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 	case "visits":
 		if id > storage.VisitCount {
 			ctx.Error("", fasthttp.StatusNotFound)
+			return
+		}
+
+		// check params
+		var params map[string]interface{}
+		err := json.Unmarshal(ctx.PostBody(), &params)
+
+		if err != nil {
+			ctx.Error("", fasthttp.StatusBadRequest)
 			return
 		}
 
@@ -146,7 +162,7 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx) {
 
 	buffer := bufPool.Get().(*bytes.Buffer)
 	buffer.Reset()
-	buffer.WriteString("{}")
+	buffer.Write([]byte(`{}`))
 
 	ctx.Write(buffer.Bytes())
 	bufPool.Put(buffer)

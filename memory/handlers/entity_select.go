@@ -38,11 +38,11 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
 	var entityValue string
-	var id int32
-
-	id, _ = ctx.UserValue("id").(int32)
 
 	entityValue, ok := ctx.UserValue("entity").(string)
+
+	var id int32
+	id, _ = ctx.UserValue("id").(int32)
 
 	if !ok || !(entityValue == "users" || entityValue == "locations" || entityValue == "visits"){
 		ctx.Error("", fasthttp.StatusNotFound)
@@ -65,7 +65,7 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 
 		buffer := bufPool.Get().(*bytes.Buffer)
 		buffer.Reset()
-		buffer.Write(entity.GetBytes())
+		buffer.WriteString(entity.GetString())
 
 		ctx.Write(buffer.Bytes())
 		bufPool.Put(buffer)
@@ -84,7 +84,7 @@ func EntitySelectHandler(ctx *fasthttp.RequestCtx) {
 
 		buffer := bufPool.Get().(*bytes.Buffer)
 		buffer.Reset()
-		buffer.Write(entity.GetBytes())
+		buffer.WriteString(entity.GetString())
 
 		ctx.Write(buffer.Bytes())
 		bufPool.Put(buffer)

@@ -101,7 +101,7 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx) {
 
 	buffer := bufPool.Get().(*bytes.Buffer)
 	buffer.Reset()
-	buffer.WriteString("{}")
+	buffer.Write([]byte(`{}`))
 
 	ctx.Write(buffer.Bytes())
 	bufPool.Put(buffer)
