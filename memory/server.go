@@ -7,7 +7,6 @@ import (
 	"os"
 	"log"
 	"github.com/rannoch/highloadcup2017/memory/storage"
-	"flag"
 	//"runtime/pprof"
 	//"time"
 	"bytes"
