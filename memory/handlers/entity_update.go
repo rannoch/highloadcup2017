@@ -9,7 +9,7 @@ import (
 	"bytes"
 )
 
-func EntityUpdateHandler(ctx *fasthttp.RequestCtx, id int32, entityValue []byte) {
+func EntityUpdateHandler(ctx *fasthttp.RequestCtx, id int64, entityValue []byte) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
 	defer ctx.SetConnectionClose()
@@ -89,15 +89,17 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx, id int32, entityValue []byte)
 
 		userParam, ok := params["user"]
 		if ok && userParam != entity.User {
-			var userIdOld int32 = entity.User
-			var userIdUpdated int32
+			var userIdOld int64 = entity.User
+			var userIdUpdated int64
 			switch userParam.(type) {
+			case int64:
+				userIdUpdated = userParam.(int64)
 			case int32:
-				userIdUpdated = userParam.(int32)
+				userIdUpdated = int64(userParam.(int32))
 			case float32:
-				userIdUpdated = int32(userParam.(float32))
+				userIdUpdated = int64(userParam.(float32))
 			case float64:
-				userIdUpdated = int32(userParam.(float64))
+				userIdUpdated = int64(userParam.(float64))
 			}
 
 			userUpdated := storage.UserDb[userIdUpdated]
@@ -119,15 +121,17 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx, id int32, entityValue []byte)
 
 		locationParam, ok := params["location"]
 		if ok && locationParam != entity.Location {
-			var locationIdOld int32 = entity.Location
-			var locationIdUpdated int32
+			var locationIdOld int64 = entity.Location
+			var locationIdUpdated int64
 			switch locationParam.(type) {
+			case int64:
+				locationIdUpdated = locationParam.(int64)
 			case int32:
-				locationIdUpdated = locationParam.(int32)
+				locationIdUpdated = int64(locationParam.(int32))
 			case float32:
-				locationIdUpdated = int32(locationParam.(float32))
+				locationIdUpdated = int64(locationParam.(float32))
 			case float64:
-				locationIdUpdated = int32(locationParam.(float64))
+				locationIdUpdated = int64(locationParam.(float64))
 			}
 
 			locationUpdated := storage.LocationDb[locationIdUpdated]

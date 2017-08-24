@@ -29,7 +29,7 @@ var bufPool = sync.Pool{
 	},
 }
 
-func EntitySelectHandler(ctx *fasthttp.RequestCtx, id int32, entityValue []byte) {
+func EntitySelectHandler(ctx *fasthttp.RequestCtx, id int64, entityValue []byte) {
 	/*flag.Parse()
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)

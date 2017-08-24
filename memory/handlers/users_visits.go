@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-func UsersVisitsHandler(ctx *fasthttp.RequestCtx, id int32) {
+func UsersVisitsHandler(ctx *fasthttp.RequestCtx, id int64) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
 	var fromDate, toDate, toDistance int
@@ -61,17 +61,17 @@ func UsersVisitsHandler(ctx *fasthttp.RequestCtx, id int32) {
 
 	atLeastOneFound := false
 	for _, visit := range user.Visits {
-		if fromDate > 0 && visit.Visited_at < int32(fromDate) {
+		if fromDate > 0 && visit.Visited_at < int64(fromDate) {
 			continue
 		}
-		if toDate > 0 && visit.Visited_at > int32(toDate) {
+		if toDate > 0 && visit.Visited_at > int64(toDate) {
 			continue
 		}
 		if len(country) > 0 && visit.Location_model.Country != country {
 			continue
 		}
 
-		if toDistance > 0 && visit.Location_model.Distance >= int32(toDistance) {
+		if toDistance > 0 && visit.Location_model.Distance >= int64(toDistance) {
 			continue
 		}
 

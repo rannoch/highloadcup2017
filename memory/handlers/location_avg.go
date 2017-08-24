@@ -8,7 +8,7 @@ import (
 	"bytes"
 )
 
-func LocationsAvgHandler(ctx *fasthttp.RequestCtx, id int32) {
+func LocationsAvgHandler(ctx *fasthttp.RequestCtx, id int64) {
 	ctx.SetContentType("application/json;charset=utf-8")
 
 	var fromDate, toDate, fromAge, toAge int
@@ -67,23 +67,23 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx, id int32) {
 		return
 	}
 
-	var avg float32 = 0
+	var avg float64 = 0
 
-	var marksSum int32 = 0
-	var markCount int32 = 0
+	var marksSum int64 = 0
+	var markCount int64 = 0
 
 	for i := len(location.Visits) - 1; i >= 0; i -- {
 		visit := location.Visits[i]
-		if fromDate > 0 && visit.Visited_at <= int32(fromDate) {
+		if fromDate > 0 && visit.Visited_at <= int64(fromDate) {
 			continue
 		}
-		if toDate > 0 && visit.Visited_at >= int32(toDate) {
+		if toDate > 0 && visit.Visited_at >= int64(toDate) {
 			continue
 		}
-		if fromAge > 0 && visit.User_model.Birth_date >= int32(time.Now().AddDate(-fromAge, 0, 0).Unix()) {
+		if fromAge > 0 && visit.User_model.Birth_date >= time.Now().AddDate(-fromAge, 0, 0).Unix() {
 			continue
 		}
-		if toAge > 0 && visit.User_model.Birth_date <= int32(time.Now().AddDate(-toAge, 0, 0).Unix()) {
+		if toAge > 0 && visit.User_model.Birth_date <= time.Now().AddDate(-toAge, 0, 0).Unix() {
 			continue
 		}
 		if len(gender) > 0 && visit.User_model.Gender != gender {
@@ -95,7 +95,7 @@ func LocationsAvgHandler(ctx *fasthttp.RequestCtx, id int32) {
 	}
 
 	if markCount > 0 {
-		avg = float32(marksSum) / float32(markCount)
+		avg = float64(marksSum) / float64(markCount)
 	}
 
 	//ctx.SetBody([]byte(fmt.Sprintf("{\"avg\" : %.5f}", avg)))

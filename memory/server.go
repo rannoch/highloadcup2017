@@ -87,7 +87,7 @@ func main() {
 			}
 
 			//POST /<entity>/<id> на обновление
-			handlers.EntityUpdateHandler(ctx, int32(id), entity)
+			handlers.EntityUpdateHandler(ctx, int64(id), entity)
 			return
 		}
 
@@ -114,11 +114,11 @@ func main() {
 
 			if len(params) == 3 {
 				if bytes.Equal(entity, handlers.UsersBytes) && bytes.Equal(params[2], handlers.VisitsBytes) {
-					handlers.UsersVisitsHandler(ctx, int32(id))
+					handlers.UsersVisitsHandler(ctx, int64(id))
 					return
 				}
 				if bytes.Equal(entity, handlers.LocationsBytes) && bytes.Equal(params[2], handlers.AvgBytes) {
-					handlers.LocationsAvgHandler(ctx, int32(id))
+					handlers.LocationsAvgHandler(ctx, int64(id))
 					return
 				}
 
@@ -126,7 +126,7 @@ func main() {
 				return
 			}
 
-			handlers.EntitySelectHandler(ctx, int32(id), entity)
+			handlers.EntitySelectHandler(ctx, int64(id), entity)
 			return
 		}
 

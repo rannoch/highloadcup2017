@@ -7,11 +7,11 @@ import (
 )
 
 type Location struct {
-	Id       int32 `json:"id"`
+	Id       int64 `json:"id"`
 	Place    string `json:"place"`
 	Country  string `json:"country"`
 	City     string `json:"city"`
-	Distance int32 `json:"distance"`
+	Distance int64 `json:"distance"`
 	Visits   []*Visit `json:"-"`
 }
 
@@ -45,14 +45,15 @@ func (location *Location) SetParams(params map[string]interface{}) {
 	id, ok := params["id"]; if ok {
 		switch id.(type) {
 		case int32:
-			location.Id = id.(int32)
+			location.Id = int64(id.(int32))
+		case int64:
+			location.Id = id.(int64)
 		case float32:
-			location.Id = int32(id.(float32))
+			location.Id = int64(id.(float32))
 		case float64:
-			location.Id = int32(id.(float64))
+			location.Id = int64(id.(float64))
 		case json.Number:
-			t, _ := id.(json.Number).Int64()
-			location.Id = int32(t)
+			location.Id, _ = id.(json.Number).Int64()
 		}
 	}
 	place, ok := params["place"]; if ok {
@@ -67,14 +68,15 @@ func (location *Location) SetParams(params map[string]interface{}) {
 	distance, ok := params["distance"]; if ok {
 		switch distance.(type) {
 		case int32:
-			location.Distance = distance.(int32)
+			location.Distance = int64(distance.(int32))
+		case int64:
+			location.Distance = distance.(int64)
 		case float32:
-			location.Distance = int32(distance.(float32))
+			location.Distance = int64(distance.(float32))
 		case float64:
-			location.Distance = int32(distance.(float64))
+			location.Distance = int64(distance.(float64))
 		case json.Number:
-			t, _ := distance.(json.Number).Int64()
-			location.Distance = int32(t)
+			location.Distance, _ = distance.(json.Number).Int64()
 		}
 	}
 }

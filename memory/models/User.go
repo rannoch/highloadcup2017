@@ -7,12 +7,12 @@ import (
 )
 
 type User struct {
-	Id         int32 `json:"id"`
+	Id         int64 `json:"id"`
 	Email      string `json:"email"`
 	First_name string `json:"first_name"`
 	Last_name  string `json:"last_name"`
 	Gender     string `json:"gender"`
-	Birth_date int32 `json:"birth_date"`
+	Birth_date int64 `json:"birth_date"`
 	Visits     []*Visit `json:"-"`
 }
 
@@ -45,15 +45,16 @@ func (user *User) ValidateParams(params map[string]interface{}, scenario string)
 func (user *User) SetParams(params map[string]interface{}) {
 	id, ok := params["id"]; if ok {
 		switch id.(type) {
+		case int64:
+			user.Id = id.(int64)
 		case int32:
-			user.Id = id.(int32)
+			user.Id = int64(id.(int32))
 		case float32:
-			user.Id = int32(id.(float32))
+			user.Id = int64(id.(float32))
 		case float64:
-			user.Id = int32(id.(float64))
+			user.Id = int64(id.(float64))
 		case json.Number:
-			t, _ := id.(json.Number).Int64()
-			user.Id = int32(t)
+			user.Id, _ = id.(json.Number).Int64()
 		}
 	}
 	email, ok := params["email"]; if ok {
@@ -70,15 +71,16 @@ func (user *User) SetParams(params map[string]interface{}) {
 	}
 	birth_date, ok := params["birth_date"]; if ok {
 		switch birth_date.(type) {
+		case int64:
+			user.Birth_date = birth_date.(int64)
 		case int32:
-			user.Birth_date = birth_date.(int32)
+			user.Birth_date = int64(birth_date.(int32))
 		case float32:
-			user.Birth_date = int32(birth_date.(float32))
+			user.Birth_date = int64(birth_date.(float32))
 		case float64:
-			user.Birth_date = int32(birth_date.(float64))
+			user.Birth_date = int64(birth_date.(float64))
 		case json.Number:
-			t, _ := birth_date.(json.Number).Int64()
-			user.Birth_date = int32(t)
+			user.Birth_date, _ = birth_date.(json.Number).Int64()
 		}
 	}
 }
