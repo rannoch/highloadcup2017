@@ -12,9 +12,12 @@ import (
 	"bytes"
 	//"fmt"
 	"strconv"
+	"time"
+	"flag"
+	"runtime/pprof"
 )
 
-//var cpuprofile = flag.String("cpuprofile", "/home/baska/projects/go/src/github.com/rannoch/highloadcup2017/memory/memory.prof", "write cpu profile to file")
+var cpuprofile = flag.String("cpuprofile", "/home/baska/projects/go/src/github.com/rannoch/highloadcup2017/memory/memory.prof", "write cpu profile to file")
 
 func main() {
 	if len(os.Args) < 3 {
@@ -27,7 +30,7 @@ func main() {
 	LoadData(os.Args[2])
 
 	//flag.Parse()
-	/*if *cpuprofile != "" {
+	if false && *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
 			log.Fatal(err)
@@ -37,14 +40,14 @@ func main() {
 
 		go func() {
 			select {
-			case <-time.After(30 * time.Second):
+			case <-time.After(120 * time.Second):
 				pprof.StopCPUProfile()
 				f.Close()
 			}
 		}()
 		//defer f.Close()
 		//defer pprof.StopCPUProfile()
-	}*/
+	}
 
 	m := func(ctx *fasthttp.RequestCtx) {
 		path := ctx.Path()
@@ -87,7 +90,7 @@ func main() {
 			}
 
 			//POST /<entity>/<id> на обновление
-			handlers.EntityUpdateHandler(ctx, int32(id), entity)
+			handlers.EntityUpdateHandler(ctx, int64(id), entity)
 			return
 		}
 
@@ -114,11 +117,11 @@ func main() {
 
 			if len(params) == 3 {
 				if bytes.Equal(entity, handlers.UsersBytes) && bytes.Equal(params[2], handlers.VisitsBytes) {
-					handlers.UsersVisitsHandler(ctx, int32(id))
+					handlers.UsersVisitsHandler(ctx, int64(id))
 					return
 				}
 				if bytes.Equal(entity, handlers.LocationsBytes) && bytes.Equal(params[2], handlers.AvgBytes) {
-					handlers.LocationsAvgHandler(ctx, int32(id))
+					handlers.LocationsAvgHandler(ctx, int64(id))
 					return
 				}
 
@@ -126,7 +129,7 @@ func main() {
 				return
 			}
 
-			handlers.EntitySelectHandler(ctx, int32(id), entity)
+			handlers.EntitySelectHandler(ctx, int64(id), entity)
 			return
 		}
 

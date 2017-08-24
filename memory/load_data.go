@@ -75,7 +75,7 @@ func parseAndAppendFile(file string) () {
 			storage.UserDb[v.Id] = &c
 			storage.UserBytesDb[v.Id] = c.GetBytes()
 		}
-		storage.UserCount += int32(len(m["users"]))
+		storage.UserCount += int64(len(m["users"]))
 
 	case strings.Contains(file, "locations"):
 		var m = make(map[string][]models.Location)
@@ -91,7 +91,7 @@ func parseAndAppendFile(file string) () {
 			storage.LocationDb[v.Id] = &c
 			storage.LocationBytesDb[v.Id] = c.GetBytes()
 		}
-		storage.LocationCount += int32(len(m["locations"]))
+		storage.LocationCount += int64(len(m["locations"]))
 
 	case strings.Contains(file, "visits"):
 		var m = make(map[string][]models.Visit)
@@ -108,7 +108,7 @@ func parseAndAppendFile(file string) () {
 			storage.VisitBytesDb[v.Id] = c.GetBytes()
 		}
 
-		storage.VisitCount += int32(len(m["visits"]))
+		storage.VisitCount += int64(len(m["visits"]))
 	}
 
 	return

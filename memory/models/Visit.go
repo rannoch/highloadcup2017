@@ -7,13 +7,13 @@ import (
 )
 
 type Visit struct {
-	Id             int32 `json:"id"`
-	Location       int32 `json:"location"`
-	User           int32 `json:"user"`
-	Visited_at     int32 `json:"visited_at"`
-	Mark           int32 `json:"mark"`
-	Location_model *Location `json:"-" relation:"location"`
-	User_model     *User `json:"-" relation:"user"`
+	Id             int64
+	Location       int64
+	User           int64
+	Visited_at     int64
+	Mark           int64
+	Location_model *Location
+	User_model     *User
 }
 
 func (visit *Visit) GetFields(alias string) []string {
@@ -50,66 +50,70 @@ func (visit *Visit) SetParams(params map[string]interface{}) {
 	id, ok := params["id"]; if ok {
 		switch id.(type) {
 		case int32:
-			visit.Id = id.(int32)
+			visit.Id = int64(id.(int32))
 		case float32:
-			visit.Id = int32(id.(float32))
+			visit.Id = int64(id.(float32))
 		case float64:
-			visit.Id = int32(id.(float64))
+			visit.Id = int64(id.(float64))
 		}
 	}
 	location, ok := params["location"]; if ok {
 		switch location.(type) {
 		case int32:
-			visit.Location = location.(int32)
+			visit.Location = int64(location.(int32))
+		case int64:
+			visit.Location = location.(int64)
 		case float32:
-			visit.Location = int32(location.(float32))
+			visit.Location = int64(location.(float32))
 		case float64:
-			visit.Location = int32(location.(float64))
+			visit.Location = int64(location.(float64))
 		case json.Number:
-			t, _ := location.(json.Number).Int64()
-			visit.Location = int32(t)
+			visit.Location, _ = location.(json.Number).Int64()
 		}
 	}
 
 	user, ok := params["user"]; if ok {
 		switch user.(type) {
 		case int32:
-			visit.User = user.(int32)
+			visit.User = int64(user.(int32))
+		case int64:
+			visit.User = user.(int64)
 		case float32:
-			visit.User = int32(user.(float32))
+			visit.User = int64(user.(float32))
 		case float64:
-			visit.User = int32(user.(float64))
+			visit.User = int64(user.(float64))
 		case json.Number:
-			t, _ := user.(json.Number).Int64()
-			visit.User = int32(t)
+			visit.User, _ = user.(json.Number).Int64()
 		}
 	}
 
 	visited_at, ok := params["visited_at"]; if ok {
 		switch visited_at.(type) {
 		case int32:
-			visit.Visited_at = visited_at.(int32)
+			visit.Visited_at = int64(visited_at.(int32))
+		case int64:
+			visit.Visited_at = visited_at.(int64)
 		case float32:
-			visit.Visited_at = int32(visited_at.(float32))
+			visit.Visited_at = int64(visited_at.(float32))
 		case float64:
-			visit.Visited_at = int32(visited_at.(float64))
+			visit.Visited_at = int64(visited_at.(float64))
 		case json.Number:
-			t, _ := visited_at.(json.Number).Int64()
-			visit.Visited_at = int32(t)
+			visit.Visited_at, _ = visited_at.(json.Number).Int64()
 		}
 	}
 
 	mark, ok := params["mark"]; if ok {
 		switch mark.(type) {
 		case int32:
-			visit.Mark = mark.(int32)
+			visit.Mark = int64(mark.(int32))
+		case int64:
+			visit.Mark = mark.(int64)
 		case float32:
-			visit.Mark = int32(mark.(float32))
+			visit.Mark = int64(mark.(float32))
 		case float64:
-			visit.Mark = int32(mark.(float64))
+			visit.Mark = int64(mark.(float64))
 		case json.Number:
-			t, _ := mark.(json.Number).Int64()
-			visit.Mark = int32(t)
+			visit.Mark, _ = mark.(json.Number).Int64()
 		}
 	}
 
