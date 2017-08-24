@@ -12,8 +12,8 @@ type Visit struct {
 	User           int64
 	Visited_at     int64
 	Mark           int64
-	Location_model *Location `json:"-" relation:"location"`
-	User_model     *User `json:"-" relation:"user"`
+	Location_model *Location
+	User_model     *User
 }
 
 func (visit *Visit) GetFields(alias string) []string {

@@ -2,21 +2,25 @@ package storage
 
 import "github.com/rannoch/highloadcup2017/memory/models"
 
-var UserDb [300000]*models.User
-var LocationDb [300000]*models.Location
-var VisitDb [2000000]*models.Visit
+var UserDb []*models.User
+var LocationDb []*models.Location
+var VisitDb []*models.Visit
 
 var UserCount int64
 var LocationCount int64
 var VisitCount int64
 
-var UserBytesDb [300000][]byte
-var LocationBytesDb [300000][]byte
-var VisitBytesDb [2000000][]byte
+var UserBytesDb [][]byte
+var LocationBytesDb [][]byte
+var VisitBytesDb [][]byte
 
 // todo later
 func InitMemoryMap() {
-	UserDb = [300000]*models.User{}
-	LocationDb = [300000]*models.Location{}
-	VisitDb = [2000000]*models.Visit{}
+	UserDb = make([]*models.User, 200000)
+	LocationDb = make([]*models.Location, 200000)
+	VisitDb = make([]*models.Visit, 2000000)
+
+	UserBytesDb = make([][]byte, 200000)
+	LocationBytesDb = make([][]byte, 200000)
+	VisitBytesDb = make([][]byte, 2000000)
 }

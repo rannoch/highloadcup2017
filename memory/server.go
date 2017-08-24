@@ -12,9 +12,12 @@ import (
 	"bytes"
 	//"fmt"
 	"strconv"
+	"time"
+	"flag"
+	"runtime/pprof"
 )
 
-//var cpuprofile = flag.String("cpuprofile", "/home/baska/projects/go/src/github.com/rannoch/highloadcup2017/memory/memory.prof", "write cpu profile to file")
+var cpuprofile = flag.String("cpuprofile", "/home/baska/projects/go/src/github.com/rannoch/highloadcup2017/memory/memory.prof", "write cpu profile to file")
 
 func main() {
 	if len(os.Args) < 3 {
@@ -27,7 +30,7 @@ func main() {
 	LoadData(os.Args[2])
 
 	//flag.Parse()
-	/*if *cpuprofile != "" {
+	if false && *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
 		if err != nil {
 			log.Fatal(err)
@@ -37,14 +40,14 @@ func main() {
 
 		go func() {
 			select {
-			case <-time.After(30 * time.Second):
+			case <-time.After(120 * time.Second):
 				pprof.StopCPUProfile()
 				f.Close()
 			}
 		}()
 		//defer f.Close()
 		//defer pprof.StopCPUProfile()
-	}*/
+	}
 
 	m := func(ctx *fasthttp.RequestCtx) {
 		path := ctx.Path()
