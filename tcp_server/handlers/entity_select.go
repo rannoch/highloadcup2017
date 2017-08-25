@@ -63,5 +63,5 @@ func EntitySelectHandler(ctx *server.HlcupCtx, id int64, entityValue []byte) {
 		//bufPool.Put(buffer)
 	}
 
-	ctx.Close()
+	//ctx.Close()
 }

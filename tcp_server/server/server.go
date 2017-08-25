@@ -8,7 +8,9 @@ import (
 	"github.com/valyala/fasthttp"
 	//"fmt"
 	"fmt"
-	"io"
+	//"io"
+	//"time"
+	"time"
 )
 
 type HlcupCtx struct {
@@ -17,6 +19,7 @@ type HlcupCtx struct {
 	IsGet  bool
 	IsPost bool
 	Connection net.Conn
+	ConnectionClosed bool
 
 	Id     int64
 	HasUrlParams bool
@@ -28,37 +31,42 @@ type HlcupCtx struct {
 	HasPostBody bool
 }
 
-func (hlcupRequest *HlcupCtx) TryParse() {
-	startWith := 0
+func (hlcupRequest *HlcupCtx) Handle(handlerFunc func(ctx *HlcupCtx) (err error)) {
+	reader := bufio.NewReader(hlcupRequest.Connection)
+
+	buf := make([]byte, 2048)
+
+	//net.TCPConn.SetKeepAlive(true)
 
 	for {
-		err := hlcupRequest.Parse(startWith)
+		//hlcupRequest.Connection.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 
-		if err == io.EOF {
-			startWith += r.Buffered()
-			continue
+		n, err := reader.Read(buf)
+
+		if err != nil {
+			hlcupRequest.Close()
+			return
 		}
 
-		if err == nil {
-			break
+		err = hlcupRequest.Parse(buf, n)
+
+		handlerFunc(hlcupRequest)
+
+		if hlcupRequest.ConnectionClosed {
+			return
 		}
+
+		time.Sleep(1 * time.Second)
 	}
 }
 
-func (hlcupRequest *HlcupCtx) Parse(startWith int) (err error) {
-	reader := bufio.NewReader(hlcupRequest.Connection)
-	//var body []byte = []byte{}
-	body := make([]byte, 1024)
-
-	//reader.Reset(hlcupRequest.Connection)
-	body, err = reader.Peek(startWith)
-
-	fmt.Println("START ---------")
-	fmt.Println(string(body))
-	fmt.Println("END ---------")
+func (hlcupRequest *HlcupCtx) Parse(body []byte, n int) (err error) {
+	//fmt.Println("START ---------")
+	//fmt.Println(string(body))
+	//fmt.Println("END ---------")
 	if err != nil {
 		fmt.Println("Error reading:", err.Error())
-		err = io.EOF
+		//err = io.EOF
 		return
 	}
 
@@ -112,31 +120,60 @@ func (hlcupRequest *HlcupCtx) Parse(startWith int) (err error) {
 		if postBodyIndex <= 0 {
 			return
 		}
-		hlcupRequest.PostBody = body[postBodyIndex :]
+		hlcupRequest.PostBody = body[postBodyIndex + 2 :n]
 
-		//fmt.Println(string(hlcupRequest.PostBody))
+		//fmt.Println("." + string(hlcupRequest.PostBody) + ".")
 	}
 
 	return
 }
 
 func (hlcupRequest *HlcupCtx) Error(status int) {
-	switch status {
-	case 404:
-		hlcupRequest.Connection.Write([]byte("HTTP/1.1 404 OK\ncontent-type:application/json;charset=utf-8;Connection: Closed\n\n"))
-	case 400:
-		hlcupRequest.Connection.Write([]byte("HTTP/1.1 400 OK\ncontent-type:application/json;charset=utf-8;Connection: Closed\n\n"))
-	default:
-		hlcupRequest.Connection.Write([]byte("HTTP/1.1 404 OK\ncontent-type:application/json;charset=utf-8;Connection: Closed\n\n"))
+	if hlcupRequest.IsGet {
+		switch status {
+		case 404:
+			hlcupRequest.Connection.Write([]byte("HTTP/1.1 404 OK\ncontent-type:application/json;charset=utf-8;Connection: Keep-Alive\n\n"))
+		case 400:
+			hlcupRequest.Connection.Write([]byte("HTTP/1.1 400 OK\ncontent-type:application/json;charset=utf-8;Connection: Keep-Alive\n\n"))
+		default:
+			hlcupRequest.Connection.Write([]byte("HTTP/1.1 404 OK\ncontent-type:application/json;charset=utf-8;Connection: Keep-Alive\n\n"))
+		}
+	} else {
+		switch status {
+		case 404:
+			hlcupRequest.Connection.Write([]byte("HTTP/1.1 404 OK\ncontent-type:application/json;charset=utf-8;Connection: Closed\n\n"))
+		case 400:
+			hlcupRequest.Connection.Write([]byte("HTTP/1.1 400 OK\ncontent-type:application/json;charset=utf-8;Connection: Closed\n\n"))
+		default:
+			hlcupRequest.Connection.Write([]byte("HTTP/1.1 404 OK\ncontent-type:application/json;charset=utf-8;Connection: Closed\n\n"))
+		}
 	}
 
-	hlcupRequest.Connection.Close()
+	hlcupRequest.Close()
 }
 
 func (hlcupRequest *HlcupCtx) SetBody(b []byte) {
-	hlcupRequest.Connection.Write([]byte("HTTP/1.1 200 OK\ncontent-type:application/json;charset=utf-8;Connection: Closed\n\n"))
+	if hlcupRequest.IsGet {
+		hlcupRequest.Connection.Write([]byte("HTTP/1.1 200 OK\ncontent-type:application/json;charset=utf-8;\nConnection: Keep-Alive;\nTransfer-Encoding: chunked"))
+	} else {
+		hlcupRequest.Connection.Write([]byte("HTTP/1.1 200 OK\ncontent-type:application/json;charset=utf-8;\nConnection: Closed;Transfer-Encoding: chunked"))
+	}
 
+	hlcupRequest.Connection.Write(strCRLF)
+	hlcupRequest.Connection.Write(strCRLF)
+
+	length := []byte(fmt.Sprintf("%x", len(string(b[:]))))
+	//
+	//fmt.Println(string(b[:]))
+	//fmt.Println(len(b[:]))
+	//fmt.Println(len(string(b[:])))
+	hlcupRequest.Connection.Write(length)
+	hlcupRequest.Connection.Write(strCRLF)
 	hlcupRequest.Connection.Write(b)
+	hlcupRequest.Connection.Write(strCRLF)
+	hlcupRequest.Connection.Write(strZero)
+	hlcupRequest.Connection.Write(strCRLF)
+	hlcupRequest.Connection.Write(strCRLF)
 }
 
 func (hlcupRequest *HlcupCtx) Write(b []byte) {
@@ -148,6 +185,8 @@ func (hlcupRequest *HlcupCtx) WriteString(s string) {
 }
 
 func (hlcupRequest *HlcupCtx) Close() {
+	hlcupRequest.ConnectionClosed = true
+
 	hlcupRequest.Connection.Close()
 }
 

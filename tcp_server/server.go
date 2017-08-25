@@ -28,7 +28,12 @@ func main() {
 	fmt.Println("Launching server...")
 
 	// listen on all interfaces
-	listener, _ := net.Listen("tcp4", ":8086")
+	listener, err := net.Listen("tcp4", ":" + os.Args[1])
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	defer listener.Close()
 
 	// run loop forever (or until ctrl-c)
@@ -47,13 +52,11 @@ func main() {
 			Connection:connection,
 			HasUrlParams:true,
 		}
-		hlcupCtx.TryParse()
-
-		go Handler(&hlcupCtx)
+		go hlcupCtx.Handle(Handler)
 	}
 }
 
-func Handler(hlcupCtx *server.HlcupCtx) {
+func Handler(hlcupCtx *server.HlcupCtx) (err error) {
 	path := hlcupCtx.Url
 
 	if hlcupCtx.IsPost {
@@ -88,12 +91,12 @@ func Handler(hlcupCtx *server.HlcupCtx) {
 
 		if err != nil || id < 0{
 			hlcupCtx.Error(fasthttp.StatusNotFound)
-			return
+			return err
 		}
 
 		//POST /<entity>/<id> на обновление
 		handlers.EntityUpdateHandler(hlcupCtx, int64(id), entity)
-		return
+		return err
 	}
 
 	if hlcupCtx.IsGet {
@@ -117,28 +120,30 @@ func Handler(hlcupCtx *server.HlcupCtx) {
 		id, err := strconv.Atoi(string(idValue[:]))
 		if err != nil || id < 0{
 			hlcupCtx.Error(fasthttp.StatusNotFound)
-			return
+			return err
 		}
 
 		if len(params) == 3 {
 			if bytes.Equal(entity, handlers.UsersBytes) && bytes.Equal(params[2], handlers.VisitsBytes) {
 				handlers.UsersVisitsHandler(hlcupCtx, int64(id))
-				return
+				return err
 			}
 			if bytes.Equal(entity, handlers.LocationsBytes) && bytes.Equal(params[2], handlers.AvgBytes) {
 				handlers.LocationsAvgHandler(hlcupCtx, int64(id))
-				return
+				return err
 			}
 
 			hlcupCtx.Error(fasthttp.StatusBadRequest)
-			return
+			return err
 		}
 
 		handlers.EntitySelectHandler(hlcupCtx, int64(id), entity)
-		return
+		return err
 	}
 
 	hlcupCtx.Error(fasthttp.StatusNotFound)
+
+	return
 }
 
 
