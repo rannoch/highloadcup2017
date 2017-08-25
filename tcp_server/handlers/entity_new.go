@@ -5,36 +5,35 @@ import (
 	"github.com/antonholmquist/jason"
 	"encoding/json"
 	"sort"
-	"github.com/rannoch/highloadcup2017/memory/models"
-	"github.com/rannoch/highloadcup2017/memory/storage"
+	"github.com/rannoch/highloadcup2017/tcp_server/models"
+	"github.com/rannoch/highloadcup2017/tcp_server/storage"
+	"github.com/rannoch/highloadcup2017/tcp_server/server"
 )
 
-func EntitityNewHandler(ctx *fasthttp.RequestCtx, entityValue string) {
-	ctx.SetContentType("application/json;charset=utf-8")
-
+func EntitityNewHandler(ctx *server.HlcupCtx, entityValue string) {
 	var params map[string]interface{}
 
-	defer ctx.SetConnectionClose()
+	defer ctx.Close()
 
 	switch entityValue{
 	case "users":
 		entity := &models.User{}
 		// check params
-		postBody, err := jason.NewValueFromBytes(ctx.PostBody())
+		postBody, err := jason.NewValueFromBytes(ctx.PostBody)
 
 		if err != nil {
-			ctx.Error("", fasthttp.StatusBadRequest)
+			ctx.Error(fasthttp.StatusBadRequest)
 			return
 		}
 
 		params, ok := postBody.Interface().(map[string]interface{})
 		if !ok {
-			ctx.Error("", fasthttp.StatusBadRequest)
+			ctx.Error(fasthttp.StatusBadRequest)
 			return
 		}
 
 		if !entity.ValidateParams(params, "insert") {
-			ctx.Error("", fasthttp.StatusBadRequest)
+			ctx.Error(fasthttp.StatusBadRequest)
 			return
 		}
 
@@ -46,14 +45,14 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx, entityValue string) {
 	case "locations":
 		entity := &models.Location{}
 
-		err := json.Unmarshal(ctx.PostBody(), &params)
+		err := json.Unmarshal(ctx.PostBody, &params)
 		if err != nil {
-			ctx.Error("", fasthttp.StatusBadRequest)
+			ctx.Error(fasthttp.StatusBadRequest)
 			return
 		}
 
 		if !entity.ValidateParams(params, "insert") {
-			ctx.Error("", fasthttp.StatusBadRequest)
+			ctx.Error(fasthttp.StatusBadRequest)
 			return
 		}
 
@@ -65,14 +64,14 @@ func EntitityNewHandler(ctx *fasthttp.RequestCtx, entityValue string) {
 	case "visits":
 		entity := &models.Visit{}
 
-		err := json.Unmarshal(ctx.PostBody(), &params)
+		err := json.Unmarshal(ctx.PostBody, &params)
 		if err != nil {
-			ctx.Error("", fasthttp.StatusBadRequest)
+			ctx.Error(fasthttp.StatusBadRequest)
 			return
 		}
 
 		if !entity.ValidateParams(params, "insert") {
-			ctx.Error("", fasthttp.StatusBadRequest)
+			ctx.Error(fasthttp.StatusBadRequest)
 			return
 		}
 

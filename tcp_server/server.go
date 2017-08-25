@@ -37,6 +37,7 @@ func main() {
 		connection, err := listener.Accept()
 
 		if err != nil {
+			fmt.Println(err.Error())
 			connection.Close()
 			continue
 			//panic("listener accept error")
@@ -46,7 +47,7 @@ func main() {
 			Connection:connection,
 			HasUrlParams:true,
 		}
-		hlcupCtx.Parse()
+		hlcupCtx.TryParse()
 
 		go Handler(&hlcupCtx)
 	}
@@ -55,7 +56,7 @@ func main() {
 func Handler(hlcupCtx *server.HlcupCtx) {
 	path := hlcupCtx.Url
 
-	/*if hlcupCtx.IsPost {
+	if hlcupCtx.IsPost {
 		//POST /<entity>/new на создание
 		if bytes.Equal(path, handlers.UsersNewBytes) || bytes.Equal(path, handlers.LocationsNewBytes) || bytes.Equal(path, handlers.VisitsNewBytes) {
 			switch {
@@ -93,7 +94,7 @@ func Handler(hlcupCtx *server.HlcupCtx) {
 		//POST /<entity>/<id> на обновление
 		handlers.EntityUpdateHandler(hlcupCtx, int64(id), entity)
 		return
-	}*/
+	}
 
 	if hlcupCtx.IsGet {
 		params := bytes.Split(path, []byte("/"))

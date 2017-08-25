@@ -6,6 +6,9 @@ import (
 	"bytes"
 	//"fmt"
 	"github.com/valyala/fasthttp"
+	//"fmt"
+	"fmt"
+	"io"
 )
 
 type HlcupCtx struct {
@@ -20,18 +23,36 @@ type HlcupCtx struct {
 	UrlParams []byte
 
 	QueryArgs fasthttp.Args
+
+	PostBody []byte
+	HasPostBody bool
 }
 
-func (hlcupRequest *HlcupCtx) Parse() {
+func (hlcupRequest *HlcupCtx) TryParse() {
+	for {
+		err := hlcupRequest.Parse()
+
+		if err != io.EOF {
+			break
+		}
+	}
+}
+
+func (hlcupRequest *HlcupCtx) Parse() (err error) {
 	reader := bufio.NewReader(hlcupRequest.Connection)
 	//var body []byte = []byte{}
 	body := make([]byte, 1024)
 
-	_, err := reader.Read(body)
+	//reader.Reset(hlcupRequest.Connection)
+	_, err = reader.Read(body)
 
-	//fmt.Println(string(body))
+	fmt.Println("START ---------")
+	fmt.Println(string(body))
+	fmt.Println("END ---------")
 	if err != nil {
-		//fmt.Println("Error reading:", err.Error())
+		fmt.Println("Error reading:", err.Error())
+		err = io.EOF
+		return
 	}
 
 	// method
@@ -75,9 +96,21 @@ func (hlcupRequest *HlcupCtx) Parse() {
 		}
 
 		hlcupRequest.UrlParams = body[methodIndex + urlIndex + 2: methodIndex + urlIndex + 2 + paramsIndex]
-
-		//fmt.Printf(string(hlcupRequest.UrlParams))
 	}
+
+	// postBody
+	if hlcupRequest.IsPost {
+		postBodyIndex := bytes.LastIndex(body, strCRLF)
+
+		if postBodyIndex <= 0 {
+			return
+		}
+		hlcupRequest.PostBody = body[postBodyIndex :]
+
+		//fmt.Println(string(hlcupRequest.PostBody))
+	}
+
+	return
 }
 
 func (hlcupRequest *HlcupCtx) Error(status int) {

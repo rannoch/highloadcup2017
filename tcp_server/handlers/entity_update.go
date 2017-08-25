@@ -2,38 +2,37 @@ package handlers
 
 import (
 	"github.com/valyala/fasthttp"
-	"github.com/rannoch/highloadcup2017/memory/storage"
-	"github.com/rannoch/highloadcup2017/memory/models"
+	"github.com/rannoch/highloadcup2017/tcp_server/storage"
+	"github.com/rannoch/highloadcup2017/tcp_server/models"
 	"encoding/json"
 	"sort"
 	"bytes"
+	"github.com/rannoch/highloadcup2017/tcp_server/server"
 )
 
-func EntityUpdateHandler(ctx *fasthttp.RequestCtx, id int64, entityValue []byte) {
-	ctx.SetContentType("application/json;charset=utf-8")
-
-	defer ctx.SetConnectionClose()
+func EntityUpdateHandler(ctx *server.HlcupCtx, id int64, entityValue []byte) {
+	defer ctx.Close()
 
 	switch {
 	case bytes.Equal(entityValue, UsersBytes):
 		if id > storage.UserCount {
-			ctx.Error("", fasthttp.StatusNotFound)
+			ctx.Error(fasthttp.StatusNotFound)
 			return
 		}
 
 		// check params
 		var params map[string]interface{}
-		err := json.Unmarshal(ctx.PostBody(), &params)
+		err := json.Unmarshal(ctx.PostBody, &params)
 
 		if err != nil {
-			ctx.Error("", fasthttp.StatusBadRequest)
+			ctx.Error(fasthttp.StatusBadRequest)
 			return
 		}
 
 		entity := storage.UserDb[id]
 
 		if !entity.ValidateParams(params, "update") {
-			ctx.Error("", fasthttp.StatusBadRequest)
+			ctx.Error(fasthttp.StatusBadRequest)
 			return
 		}
 
@@ -42,23 +41,23 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx, id int64, entityValue []byte)
 		storage.UserBytesDb[entity.Id] = entity.GetBytes()
 	case bytes.Equal(entityValue, LocationsBytes):
 		if id > storage.LocationCount {
-			ctx.Error("", fasthttp.StatusNotFound)
+			ctx.Error(fasthttp.StatusNotFound)
 			return
 		}
 
 		// check params
 		var params map[string]interface{}
-		err := json.Unmarshal(ctx.PostBody(), &params)
+		err := json.Unmarshal(ctx.PostBody, &params)
 
 		if err != nil {
-			ctx.Error("", fasthttp.StatusBadRequest)
+			ctx.Error(fasthttp.StatusBadRequest)
 			return
 		}
 
 		entity := storage.LocationDb[id]
 
 		if !entity.ValidateParams(params, "update") {
-			ctx.Error("", fasthttp.StatusBadRequest)
+			ctx.Error(fasthttp.StatusBadRequest)
 			return
 		}
 
@@ -67,23 +66,23 @@ func EntityUpdateHandler(ctx *fasthttp.RequestCtx, id int64, entityValue []byte)
 		storage.LocationBytesDb[entity.Id] = entity.GetBytes()
 	case bytes.Equal(entityValue, VisitsBytes):
 		if id > storage.VisitCount {
-			ctx.Error("", fasthttp.StatusNotFound)
+			ctx.Error(fasthttp.StatusNotFound)
 			return
 		}
 
 		// check params
 		var params map[string]interface{}
-		err := json.Unmarshal(ctx.PostBody(), &params)
+		err := json.Unmarshal(ctx.PostBody, &params)
 
 		if err != nil {
-			ctx.Error("", fasthttp.StatusBadRequest)
+			ctx.Error(fasthttp.StatusBadRequest)
 			return
 		}
 
 		entity := storage.VisitDb[id]
 
 		if !entity.ValidateParams(params, "update") {
-			ctx.Error("", fasthttp.StatusBadRequest)
+			ctx.Error(fasthttp.StatusBadRequest)
 			return
 		}
 
