@@ -29,22 +29,29 @@ type HlcupCtx struct {
 }
 
 func (hlcupRequest *HlcupCtx) TryParse() {
-	for {
-		err := hlcupRequest.Parse()
+	startWith := 0
 
-		if err != io.EOF {
+	for {
+		err := hlcupRequest.Parse(startWith)
+
+		if err == io.EOF {
+			startWith += r.Buffered()
+			continue
+		}
+
+		if err == nil {
 			break
 		}
 	}
 }
 
-func (hlcupRequest *HlcupCtx) Parse() (err error) {
+func (hlcupRequest *HlcupCtx) Parse(startWith int) (err error) {
 	reader := bufio.NewReader(hlcupRequest.Connection)
 	//var body []byte = []byte{}
 	body := make([]byte, 1024)
 
 	//reader.Reset(hlcupRequest.Connection)
-	_, err = reader.Read(body)
+	body, err = reader.Peek(startWith)
 
 	fmt.Println("START ---------")
 	fmt.Println(string(body))
