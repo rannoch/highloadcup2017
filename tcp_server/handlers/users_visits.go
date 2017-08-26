@@ -8,6 +8,8 @@ import (
 	"github.com/valyala/fasthttp"
 	"fmt"
 	"github.com/rannoch/highloadcup2017/tcp_server/storage"
+	"bytes"
+	//"github.com/rannoch/highloadcup2017/tcp_server/logger"
 )
 
 func UsersVisitsHandler(ctx *server.HlcupCtx, id int64) {
@@ -25,39 +27,44 @@ func UsersVisitsHandler(ctx *server.HlcupCtx, id int64) {
 		return
 	}
 
-	ctx.ParseParams()
+	if ctx.HasUrlParams {
+		ctx.ParseParams()
 
-	if ctx.QueryArgs.Has("fromDate") {
-		fromDate, err = ctx.QueryArgs.GetUint("fromDate")
+		if ctx.QueryArgs.Has("fromDate") {
+			fromDate, err = ctx.QueryArgs.GetUint("fromDate")
 
-		if err != nil {
-			ctx.Error(fasthttp.StatusBadRequest)
-			return
+			if err != nil {
+				ctx.Error(fasthttp.StatusBadRequest)
+				return
+			}
+		}
+
+		if ctx.QueryArgs.Has("toDate") {
+			toDate, err = ctx.QueryArgs.GetUint("toDate")
+
+			if err != nil {
+				ctx.Error(fasthttp.StatusBadRequest)
+				return
+			}
+		}
+
+		if ctx.QueryArgs.Has("toDistance") {
+			toDistance, err = ctx.QueryArgs.GetUint("toDistance")
+
+			if err != nil {
+				ctx.Error(fasthttp.StatusBadRequest)
+				return
+			}
 		}
 	}
 
-	if ctx.QueryArgs.Has("toDate") {
-		toDate, err = ctx.QueryArgs.GetUint("toDate")
-
-		if err != nil {
-			ctx.Error(fasthttp.StatusBadRequest)
-			return
-		}
-	}
-
-	if ctx.QueryArgs.Has("toDistance") {
-		toDistance, err = ctx.QueryArgs.GetUint("toDistance")
-
-		if err != nil {
-			ctx.Error(fasthttp.StatusBadRequest)
-			return
-		}
-	}
+	//logger.PrintLog(fmt.Sprintf("%d %d %d", fromDate, toDate, toDistance))
 
 	var country = (string)(ctx.QueryArgs.Peek("country"))
 
-	ctx.Write([]byte("HTTP/1.1 200 OK\ncontent-type:application/json;charset=utf-8;Connection: Closed\n\n"))
-	ctx.WriteString(`{"visits": [`)
+	var buffer bytes.Buffer
+
+	buffer.WriteString(`{"visits": [`)
 
 	atLeastOneFound := false
 	for _, visit := range user.Visits {
@@ -76,13 +83,14 @@ func UsersVisitsHandler(ctx *server.HlcupCtx, id int64) {
 		}
 
 		if atLeastOneFound {
-			ctx.WriteString(`,`)
+			buffer.WriteString(`,`)
 		}
 
-		ctx.WriteString(fmt.Sprintf("{\"mark\":%d,\"visited_at\":%d,\"place\":\"%s\"}", visit.Mark,visit.Visited_at,visit.Location_model.Place))
+		buffer.WriteString(fmt.Sprintf("{\"mark\":%d,\"visited_at\":%d,\"place\":\"%s\"}", visit.Mark,visit.Visited_at,visit.Location_model.Place))
 		atLeastOneFound = true
 	}
 
-	ctx.WriteString(`]}`)
-	ctx.Close()
+	buffer.WriteString(`]}`)
+
+	ctx.Write(buffer.Bytes())
 }

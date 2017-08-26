@@ -6,13 +6,11 @@ import (
 	"log"
 	"os"
 	"github.com/rannoch/highloadcup2017/tcp_server/storage"
-	"bytes"
-	"fmt"
-	"net"
-	"strconv"
-	"github.com/valyala/fasthttp"
-	"github.com/rannoch/highloadcup2017/tcp_server/handlers"
 	"github.com/rannoch/highloadcup2017/tcp_server/server"
+	"github.com/valyala/fasthttp"
+	"bytes"
+	"strconv"
+	"github.com/rannoch/highloadcup2017/tcp_server/handlers"
 )
 
 func main() {
@@ -25,38 +23,14 @@ func main() {
 	storage.InitMemoryMap()
 	LoadData(os.Args[2])
 
-	fmt.Println("Launching server...")
+	tcpServer := server.New(os.Args[1])
+	tcpServer.HandleFunc = HandleFunc
 
-	// listen on all interfaces
-	listener, err := net.Listen("tcp4", ":" + os.Args[1])
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	defer listener.Close()
-
-	// run loop forever (or until ctrl-c)
-	for {
-		// accept connection on port
-		connection, err := listener.Accept()
-
-		if err != nil {
-			fmt.Println(err.Error())
-			connection.Close()
-			continue
-			//panic("listener accept error")
-		}
-
-		hlcupCtx := server.HlcupCtx{
-			Connection:connection,
-			HasUrlParams:true,
-		}
-		go hlcupCtx.Handle(Handler)
-	}
+	tcpServer.Listen()
 }
 
-func Handler(hlcupCtx *server.HlcupCtx) (err error) {
+
+func HandleFunc(hlcupCtx *server.HlcupCtx) (err error) {
 	path := hlcupCtx.Url
 
 	if hlcupCtx.IsPost {
@@ -70,12 +44,15 @@ func Handler(hlcupCtx *server.HlcupCtx) (err error) {
 			case bytes.Equal(path, handlers.VisitsNewBytes):
 				handlers.EntitityNewHandler(hlcupCtx, "visits")
 			}
+
+			hlcupCtx.SendResponse()
 			return
 		}
 
 		params := bytes.Split(path, []byte("/"))
 		if len(params) != 2 {
 			hlcupCtx.Error(400)
+			hlcupCtx.SendResponse()
 			return
 		}
 
@@ -84,6 +61,7 @@ func Handler(hlcupCtx *server.HlcupCtx) (err error) {
 
 		if !(bytes.Equal(entity, handlers.UsersBytes) || bytes.Equal(entity, handlers.LocationsBytes) || bytes.Equal(entity, handlers.VisitsBytes)) {
 			hlcupCtx.Error(fasthttp.StatusBadRequest)
+			hlcupCtx.SendResponse()
 			return
 		}
 
@@ -91,11 +69,13 @@ func Handler(hlcupCtx *server.HlcupCtx) (err error) {
 
 		if err != nil || id < 0{
 			hlcupCtx.Error(fasthttp.StatusNotFound)
+			hlcupCtx.SendResponse()
 			return err
 		}
 
 		//POST /<entity>/<id> на обновление
 		handlers.EntityUpdateHandler(hlcupCtx, int64(id), entity)
+		hlcupCtx.SendResponse()
 		return err
 	}
 
@@ -103,48 +83,52 @@ func Handler(hlcupCtx *server.HlcupCtx) (err error) {
 		params := bytes.Split(path, []byte("/"))
 		if len(params) < 2 || len(params) > 3 {
 			hlcupCtx.Error(fasthttp.StatusBadRequest)
+			hlcupCtx.SendResponse()
 			return
 		}
 
 		entity := params[0]
 		idValue := params[1]
 
-		//fmt.Println(string(entity))
-		//fmt.Println(string(idValue))
-
 		if !(bytes.Equal(entity, handlers.UsersBytes) || bytes.Equal(entity, handlers.LocationsBytes) || bytes.Equal(entity, handlers.VisitsBytes)) {
 			hlcupCtx.Error(fasthttp.StatusNotFound)
+			hlcupCtx.SendResponse()
 			return
 		}
 
 		id, err := strconv.Atoi(string(idValue[:]))
 		if err != nil || id < 0{
 			hlcupCtx.Error(fasthttp.StatusNotFound)
+			hlcupCtx.SendResponse()
 			return err
 		}
 
 		if len(params) == 3 {
 			if bytes.Equal(entity, handlers.UsersBytes) && bytes.Equal(params[2], handlers.VisitsBytes) {
 				handlers.UsersVisitsHandler(hlcupCtx, int64(id))
+				hlcupCtx.SendResponse()
 				return err
 			}
 			if bytes.Equal(entity, handlers.LocationsBytes) && bytes.Equal(params[2], handlers.AvgBytes) {
 				handlers.LocationsAvgHandler(hlcupCtx, int64(id))
+				hlcupCtx.SendResponse()
 				return err
 			}
 
 			hlcupCtx.Error(fasthttp.StatusBadRequest)
+			hlcupCtx.SendResponse()
 			return err
 		}
 
 		handlers.EntitySelectHandler(hlcupCtx, int64(id), entity)
+		hlcupCtx.SendResponse()
 		return err
 	}
 
 	hlcupCtx.Error(fasthttp.StatusNotFound)
+	hlcupCtx.SendResponse()
 
 	return
 }
-
 
 

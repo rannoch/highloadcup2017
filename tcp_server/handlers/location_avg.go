@@ -6,10 +6,10 @@ import (
 	"time"
 	"fmt"
 	"github.com/rannoch/highloadcup2017/tcp_server/server"
+	"bytes"
 )
 
 func LocationsAvgHandler(ctx *server.HlcupCtx, id int64) {
-	var fromDate, toDate, fromAge, toAge int
 	var err error
 
 	if id > storage.LocationCount {
@@ -23,46 +23,51 @@ func LocationsAvgHandler(ctx *server.HlcupCtx, id int64) {
 		return
 	}
 
-	ctx.ParseParams()
+	var fromDate, toDate, fromAge, toAge int
+	var gender string
 
-	if ctx.QueryArgs.Has("fromDate") {
-		fromDate, err = ctx.QueryArgs.GetUint("fromDate")
+	if ctx.HasUrlParams {
+		ctx.ParseParams()
 
-		if err != nil {
+		if ctx.QueryArgs.Has("fromDate") {
+			fromDate, err = ctx.QueryArgs.GetUint("fromDate")
+
+			if err != nil {
+				ctx.Error(fasthttp.StatusBadRequest)
+				return
+			}
+		}
+		if ctx.QueryArgs.Has("toDate") {
+			toDate, err = ctx.QueryArgs.GetUint("toDate")
+
+			if err != nil {
+				ctx.Error(fasthttp.StatusBadRequest)
+				return
+			}
+		}
+		if ctx.QueryArgs.Has("fromAge") {
+			fromAge, err = ctx.QueryArgs.GetUint("fromAge")
+
+			if err != nil {
+				ctx.Error(fasthttp.StatusBadRequest)
+				return
+			}
+		}
+		if ctx.QueryArgs.Has("toAge") {
+			toAge, err = ctx.QueryArgs.GetUint("toAge")
+
+			if err != nil {
+				ctx.Error(fasthttp.StatusBadRequest)
+				return
+			}
+		}
+
+		gender = (string)(ctx.QueryArgs.Peek("gender"))
+
+		if gender != "" && !(gender == "m" || gender == "f") {
 			ctx.Error(fasthttp.StatusBadRequest)
 			return
 		}
-	}
-	if ctx.QueryArgs.Has("toDate") {
-		toDate, err = ctx.QueryArgs.GetUint("toDate")
-
-		if err != nil {
-			ctx.Error(fasthttp.StatusBadRequest)
-			return
-		}
-	}
-	if ctx.QueryArgs.Has("fromAge") {
-		fromAge, err = ctx.QueryArgs.GetUint("fromAge")
-
-		if err != nil {
-			ctx.Error(fasthttp.StatusBadRequest)
-			return
-		}
-	}
-	if ctx.QueryArgs.Has("toAge") {
-		toAge, err = ctx.QueryArgs.GetUint("toAge")
-
-		if err != nil {
-			ctx.Error(fasthttp.StatusBadRequest)
-			return
-		}
-	}
-
-	var gender = (string)(ctx.QueryArgs.Peek("gender"))
-
-	if gender != "" && !(gender == "m" || gender == "f") {
-		ctx.Error(fasthttp.StatusBadRequest)
-		return
 	}
 
 	var avg float64 = 0
@@ -96,7 +101,8 @@ func LocationsAvgHandler(ctx *server.HlcupCtx, id int64) {
 		avg = float64(marksSum) / float64(markCount)
 	}
 
-	ctx.Write([]byte("HTTP/1.1 200 OK\ncontent-type:application/json;charset=utf-8;Connection: Closed\n\n"))
-	ctx.WriteString(fmt.Sprintf("{\"avg\" : %.5f}", avg))
-	ctx.Close()
+	var buffer bytes.Buffer
+	buffer.WriteString(fmt.Sprintf("{\"avg\" : %.5f}", avg))
+
+	ctx.Write(buffer.Bytes())
 }

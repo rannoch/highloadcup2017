@@ -16,11 +16,11 @@ var VisitBytesDb [][]byte
 
 // todo later
 func InitMemoryMap() {
-	UserDb = make([]*models.User, 200000)
-	LocationDb = make([]*models.Location, 200000)
-	VisitDb = make([]*models.Visit, 2000000)
+	UserDb = make([]*models.User, 2000000)
+	LocationDb = make([]*models.Location, 2000000)
+	VisitDb = make([]*models.Visit, 20000000)
 
-	UserBytesDb = make([][]byte, 200000)
-	LocationBytesDb = make([][]byte, 200000)
-	VisitBytesDb = make([][]byte, 2000000)
+	UserBytesDb = make([][]byte, 2000000)
+	LocationBytesDb = make([][]byte, 2000000)
+	VisitBytesDb = make([][]byte, 20000000)
 }

@@ -33,7 +33,7 @@ func EntitySelectHandler(ctx *server.HlcupCtx, id int64, entityValue []byte) {
 		//buffer.Write(storage.UserBytesDb[id])
 
 		//ctx.Write(storage.UserBytesDb[id])
-		ctx.SetBody(storage.UserBytesDb[id])
+		ctx.Write(storage.UserBytesDb[id])
 		//bufPool.Put(buffer)
 	case bytes.Equal(entityValue, LocationsBytes):
 		if id > storage.LocationCount {
@@ -46,7 +46,7 @@ func EntitySelectHandler(ctx *server.HlcupCtx, id int64, entityValue []byte) {
 		//buffer.Write(storage.LocationBytesDb[id])
 
 		//ctx.Write(storage.LocationBytesDb[id])
-		ctx.SetBody(storage.LocationBytesDb[id])
+		ctx.Write(storage.LocationBytesDb[id])
 		//bufPool.Put(buffer)
 	case bytes.Equal(entityValue, VisitsBytes):
 		if id > storage.VisitCount {
@@ -59,7 +59,7 @@ func EntitySelectHandler(ctx *server.HlcupCtx, id int64, entityValue []byte) {
 		//buffer.Write(storage.VisitBytesDb[id])
 
 		//ctx.Write(storage.VisitBytesDb[id])
-		ctx.SetBody(storage.VisitBytesDb[id])
+		ctx.Write(storage.VisitBytesDb[id])
 		//bufPool.Put(buffer)
 	}
 

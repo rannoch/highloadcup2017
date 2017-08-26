@@ -11,8 +11,6 @@ import (
 )
 
 func EntityUpdateHandler(ctx *server.HlcupCtx, id int64, entityValue []byte) {
-	defer ctx.Close()
-
 	switch {
 	case bytes.Equal(entityValue, UsersBytes):
 		if id > storage.UserCount {
@@ -158,5 +156,5 @@ func EntityUpdateHandler(ctx *server.HlcupCtx, id int64, entityValue []byte) {
 		}
 	}
 
-	ctx.SetBody(EmptyJson)
+	ctx.Write(EmptyJson)
 }

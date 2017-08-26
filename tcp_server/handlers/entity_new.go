@@ -13,8 +13,6 @@ import (
 func EntitityNewHandler(ctx *server.HlcupCtx, entityValue string) {
 	var params map[string]interface{}
 
-	defer ctx.Close()
-
 	switch entityValue{
 	case "users":
 		entity := &models.User{}
@@ -92,6 +90,6 @@ func EntitityNewHandler(ctx *server.HlcupCtx, entityValue string) {
 		sort.Sort(models.VisitByDateAsc(user.Visits))
 	}
 
-	ctx.SetBody(EmptyJson)
+	ctx.Write(EmptyJson)
 }
 
