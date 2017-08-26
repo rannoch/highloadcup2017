@@ -193,15 +193,14 @@ func (hlcupRequest *HlcupCtx) SendResponse() {
 		if hlcupRequest.KeepAlive {
 			switch hlcupRequest.ResponseStatus {
 			case 404:
-				hlcupRequest.ResponseFullBuffer.Write(str404Chunked)
+				hlcupRequest.ResponseFullBuffer.Write(str404KeepAlive)
 			case 400:
-				hlcupRequest.ResponseFullBuffer.Write(str400Chunked)
+				hlcupRequest.ResponseFullBuffer.Write(str400KeepAlive)
 			default:
-				hlcupRequest.ResponseFullBuffer.Write(str404Chunked)
+				hlcupRequest.ResponseFullBuffer.Write(str404KeepAlive)
 			}
-
-			hlcupRequest.ResponseFullBuffer.Write(strCRLF)
-			hlcupRequest.ResponseFullBuffer.Write(strCRLF)
+			hlcupRequest.ResponseFullBuffer.Write(strContentLength)
+			hlcupRequest.ResponseFullBuffer.Write(strColonSpace)
 			hlcupRequest.ResponseFullBuffer.Write(strZero)
 			hlcupRequest.ResponseFullBuffer.Write(strCRLF)
 			hlcupRequest.ResponseFullBuffer.Write(strCRLF)
@@ -218,6 +217,12 @@ func (hlcupRequest *HlcupCtx) SendResponse() {
 				hlcupRequest.ResponseFullBuffer.Write(str404Closed)
 			}
 
+			hlcupRequest.ResponseFullBuffer.Write(strContentLength)
+			hlcupRequest.ResponseFullBuffer.Write(strColonSpace)
+			hlcupRequest.ResponseFullBuffer.Write(strZero)
+			hlcupRequest.ResponseFullBuffer.Write(strCRLF)
+			hlcupRequest.ResponseFullBuffer.Write(strCRLF)
+
 			hlcupRequest.Connection.Write(hlcupRequest.ResponseFullBuffer.Bytes())
 			bufPool.Put(hlcupRequest.ResponseFullBuffer)
 
@@ -228,32 +233,25 @@ func (hlcupRequest *HlcupCtx) SendResponse() {
 	}
 
 	if hlcupRequest.KeepAlive {
-		hlcupRequest.ResponseFullBuffer.Write(str200Chunked)
+		hlcupRequest.ResponseFullBuffer.Write(str200KeepAlive)
 	} else {
 		hlcupRequest.ResponseFullBuffer.Write(str200Closed)
 	}
 
+	hlcupRequest.ResponseFullBuffer.Write(strContentLength)
+	hlcupRequest.ResponseFullBuffer.Write(strColonSpace)
+	hlcupRequest.ResponseFullBuffer.WriteString(fmt.Sprintf("%d", len(hlcupRequest.ResponseBodyBuffer.Bytes())))
 	hlcupRequest.ResponseFullBuffer.Write(strCRLF)
 	hlcupRequest.ResponseFullBuffer.Write(strCRLF)
 
-	if hlcupRequest.KeepAlive {
-		hlcupRequest.ResponseFullBuffer.WriteString(fmt.Sprintf("%x", len(hlcupRequest.ResponseBodyBuffer.Bytes()[:])))
-		hlcupRequest.ResponseFullBuffer.Write(strCRLF)
-		hlcupRequest.ResponseFullBuffer.Write(hlcupRequest.ResponseBodyBuffer.Bytes())
-		bufPool.Put(hlcupRequest.ResponseBodyBuffer)
-		hlcupRequest.ResponseFullBuffer.Write(strCRLF)
-		hlcupRequest.ResponseFullBuffer.Write(strZero)
-		hlcupRequest.ResponseFullBuffer.Write(strCRLF)
-		hlcupRequest.ResponseFullBuffer.Write(strCRLF)
+	hlcupRequest.ResponseFullBuffer.Write(hlcupRequest.ResponseBodyBuffer.Bytes())
+	bufPool.Put(hlcupRequest.ResponseBodyBuffer)
 
-		hlcupRequest.Connection.Write(hlcupRequest.ResponseFullBuffer.Bytes())
-		bufPool.Put(hlcupRequest.ResponseFullBuffer)
-	} else {
-		hlcupRequest.ResponseFullBuffer.Write(hlcupRequest.ResponseBodyBuffer.Bytes())
-		bufPool.Put(hlcupRequest.ResponseBodyBuffer)
+	hlcupRequest.Connection.Write(hlcupRequest.ResponseFullBuffer.Bytes())
 
-		hlcupRequest.Connection.Write(hlcupRequest.ResponseFullBuffer.Bytes())
-		bufPool.Put(hlcupRequest.ResponseFullBuffer)
+	bufPool.Put(hlcupRequest.ResponseFullBuffer)
+
+	if !hlcupRequest.KeepAlive {
 		hlcupRequest.Close()
 	}
 }

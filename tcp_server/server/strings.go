@@ -72,12 +72,12 @@ var (
 	strTextSlash           = []byte("text/")
 	strApplicationSlash    = []byte("application/")
 
-	str404Chunked = []byte("HTTP/1.1 404 OK\ncontent-type:application/json;charset=utf-8\nConnection: Keep-Alive\nTransfer-Encoding: chunked")
-	str400Chunked = []byte("HTTP/1.1 400 OK\ncontent-type:application/json;charset=utf-8\nConnection: Keep-Alive\nTransfer-Encoding: chunked")
+	str400KeepAlive = []byte("HTTP/1.1 400 OK\r\ncontent-type:application/json;charset=utf-8\r\nConnection: Keep-Alive\r\n")
+	str400Closed    = []byte("HTTP/1.1 400 OK\r\ncontent-type:application/json;charset=utf-8\r\nConnection: Closed\r\n")
 
-	str404Closed = []byte("HTTP/1.1 404 OK\ncontent-type:application/json;charset=utf-8\nConnection: Closed\n\n")
-	str400Closed = []byte("HTTP/1.1 400 OK\ncontent-type:application/json;charset=utf-8\nConnection: Closed\n\n")
+	str404KeepAlive = []byte("HTTP/1.1 404 OK\r\ncontent-type:application/json;charset=utf-8\r\nConnection: Keep-Alive\r\n")
+	str404Closed    = []byte("HTTP/1.1 404 OK\r\ncontent-type:application/json;charset=utf-8\r\nConnection: Closed\r\n")
 
-	str200Chunked = []byte("HTTP/1.1 200 OK\ncontent-type:application/json;charset=utf-8\nConnection: Keep-Alive\nTransfer-Encoding: chunked")
-	str200Closed = []byte("HTTP/1.1 200 OK\ncontent-type:application/json;charset=utf-8\nConnection: Closed")
+	str200KeepAlive = []byte("HTTP/1.1 200 OK\r\ncontent-type:application/json;charset=utf-8\r\nConnection: Keep-Alive\r\n")
+	str200Closed    = []byte("HTTP/1.1 200 OK\r\ncontent-type:application/json;charset=utf-8\r\nConnection: Closed")
 )
