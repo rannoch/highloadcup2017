@@ -58,6 +58,9 @@ func (hlcupRequest *HlcupCtx) ResetParams() {
 
 	hlcupRequest.HasUrlParams = false
 	hlcupRequest.UrlParams = hlcupRequest.UrlParams[:0]
+
+	hlcupRequest.PostBody = hlcupRequest.PostBody[:0]
+	hlcupRequest.HasPostBody = false
 }
 
 func (hlcupRequest *HlcupCtx) Handle() {
@@ -149,12 +152,14 @@ func (hlcupRequest *HlcupCtx) Parse(body []byte, n int) (err error) {
 
 	// postBody
 	if hlcupRequest.IsPost {
-		postBodyIndex := bytes.LastIndex(body, append(strCRLF[:], strCRLF[:]...))
+		postBodyIndex := bytes.Index(body, append(strCRLF[:], strCRLF[:]...))
 
 		if postBodyIndex <= 0 || postBodyIndex >= n {
+			hlcupRequest.HasPostBody = false
 			return
 		}
 
+		hlcupRequest.HasPostBody = true
 		hlcupRequest.PostBody = body[postBodyIndex+2:n]
 	}
 

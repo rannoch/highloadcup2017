@@ -35,6 +35,12 @@ func HandleFunc(hlcupCtx *server.HlcupCtx) (err error) {
 	path := hlcupCtx.Url
 
 	if hlcupCtx.IsPost {
+		if !hlcupCtx.HasPostBody {
+			hlcupCtx.Error(400)
+			hlcupCtx.SendResponse()
+			return
+		}
+
 		//POST /<entity>/new на создание
 		if bytes.Equal(path, handlers.UsersNewBytes) || bytes.Equal(path, handlers.LocationsNewBytes) || bytes.Equal(path, handlers.VisitsNewBytes) {
 			switch {
