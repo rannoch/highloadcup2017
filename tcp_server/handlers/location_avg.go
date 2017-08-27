@@ -6,7 +6,6 @@ import (
 	"time"
 	"fmt"
 	"github.com/rannoch/highloadcup2017/tcp_server/server"
-	"bytes"
 )
 
 func LocationsAvgHandler(ctx *server.HlcupCtx, id int64) {
@@ -101,8 +100,5 @@ func LocationsAvgHandler(ctx *server.HlcupCtx, id int64) {
 		avg = float64(marksSum) / float64(markCount)
 	}
 
-	var buffer bytes.Buffer
-	buffer.WriteString(fmt.Sprintf("{\"avg\" : %.5f}", avg))
-
-	ctx.Write(buffer.Bytes())
+	ctx.WriteString(fmt.Sprintf("{\"avg\" : %.5f}", avg))
 }
