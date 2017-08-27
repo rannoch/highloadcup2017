@@ -28,12 +28,7 @@ func EntitySelectHandler(ctx *server.HlcupCtx, id int64, entityValue []byte) {
 			return
 		}
 
-		//buffer := bufPool.Get().(*bytes.Buffer)
-		//buffer.Reset()
-		//buffer.Write(storage.UserBytesDb[id])
-
-		//ctx.Write(storage.UserBytesDb[id])
-		ctx.Write(storage.UserBytesDb[id])
+		ctx.WriteString(storage.UserDb[id].GetString())
 		//bufPool.Put(buffer)
 	case bytes.Equal(entityValue, LocationsBytes):
 		if id > storage.LocationCount {
@@ -41,27 +36,15 @@ func EntitySelectHandler(ctx *server.HlcupCtx, id int64, entityValue []byte) {
 			return
 		}
 
-		//buffer := bufPool.Get().(*bytes.Buffer)
-		//buffer.Reset()
-		//buffer.Write(storage.LocationBytesDb[id])
-
+		ctx.WriteString(storage.LocationDb[id].GetString())
 		//ctx.Write(storage.LocationBytesDb[id])
-		ctx.Write(storage.LocationBytesDb[id])
-		//bufPool.Put(buffer)
 	case bytes.Equal(entityValue, VisitsBytes):
 		if id > storage.VisitCount {
 			ctx.Error(fasthttp.StatusNotFound)
 			return
 		}
 
-		//buffer := bufPool.Get().(*bytes.Buffer)
-		//buffer.Reset()
-		//buffer.Write(storage.VisitBytesDb[id])
-
+		ctx.WriteString(storage.VisitDb[id].GetString())
 		//ctx.Write(storage.VisitBytesDb[id])
-		ctx.Write(storage.VisitBytesDb[id])
-		//bufPool.Put(buffer)
 	}
-
-	//ctx.Close()
 }

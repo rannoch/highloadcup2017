@@ -39,7 +39,7 @@ func EntitityNewHandler(ctx *server.HlcupCtx, entityValue string) {
 
 		storage.UserDb[entity.Id] = entity
 		storage.UserCount++
-		storage.UserBytesDb[entity.Id] = entity.GetBytes()
+		//storage.UserBytesDb[entity.Id] = entity.GetBytes()
 	case "locations":
 		entity := &models.Location{}
 
@@ -58,7 +58,7 @@ func EntitityNewHandler(ctx *server.HlcupCtx, entityValue string) {
 
 		storage.LocationDb[entity.Id] = entity
 		storage.LocationCount++
-		storage.LocationBytesDb[entity.Id] = entity.GetBytes()
+		//storage.LocationBytesDb[entity.Id] = entity.GetBytes()
 	case "visits":
 		entity := &models.Visit{}
 
@@ -76,7 +76,7 @@ func EntitityNewHandler(ctx *server.HlcupCtx, entityValue string) {
 		entity.SetParams(params)
 		storage.VisitDb[entity.Id] = entity
 		storage.VisitCount++
-		storage.VisitBytesDb[entity.Id] = entity.GetBytes()
+		//storage.VisitBytesDb[entity.Id] = entity.GetBytes()
 
 		user := storage.UserDb[entity.User]
 		location := storage.LocationDb[entity.Location]

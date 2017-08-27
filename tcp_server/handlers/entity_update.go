@@ -36,7 +36,7 @@ func EntityUpdateHandler(ctx *server.HlcupCtx, id int64, entityValue []byte) {
 
 		entity.SetParams(params)
 
-		storage.UserBytesDb[entity.Id] = entity.GetBytes()
+		//storage.UserBytesDb[entity.Id] = entity.GetBytes()
 	case bytes.Equal(entityValue, LocationsBytes):
 		if id > storage.LocationCount {
 			ctx.Error(fasthttp.StatusNotFound)
@@ -61,7 +61,7 @@ func EntityUpdateHandler(ctx *server.HlcupCtx, id int64, entityValue []byte) {
 
 		entity.SetParams(params)
 
-		storage.LocationBytesDb[entity.Id] = entity.GetBytes()
+		//storage.LocationBytesDb[entity.Id] = entity.GetBytes()
 	case bytes.Equal(entityValue, VisitsBytes):
 		if id > storage.VisitCount {
 			ctx.Error(fasthttp.StatusNotFound)
@@ -148,7 +148,7 @@ func EntityUpdateHandler(ctx *server.HlcupCtx, id int64, entityValue []byte) {
 		}
 
 		entity.SetParams(params)
-		storage.VisitBytesDb[entity.Id] = entity.GetBytes()
+		//storage.VisitBytesDb[entity.Id] = entity.GetBytes()
 
 		_, ok = params["visited_at"]
 		if ok {

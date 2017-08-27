@@ -105,7 +105,7 @@ func parseAndAppendFile(file string) () {
 			c.Birth_date, _ = object.GetInt64("birth_date")
 
 			storage.UserDb[c.Id] = &c
-			storage.UserBytesDb[c.Id] = c.GetBytes()
+			//storage.UserBytesDb[c.Id] = c.GetBytes()
 		}
 		storage.UserCount += int64(len(users))
 
@@ -121,7 +121,7 @@ func parseAndAppendFile(file string) () {
 			c := v.GetLocation()
 
 			storage.LocationDb[v.Id] = &c
-			storage.LocationBytesDb[v.Id] = c.GetBytes()
+			//storage.LocationBytesDb[v.Id] = c.GetBytes()
 		}
 		storage.LocationCount += int64(len(m["locations"]))
 
@@ -137,7 +137,7 @@ func parseAndAppendFile(file string) () {
 			c := v
 
 			storage.VisitDb[v.Id] = &c
-			storage.VisitBytesDb[v.Id] = c.GetBytes()
+			//storage.VisitBytesDb[v.Id] = c.GetBytes()
 		}
 
 		storage.VisitCount += int64(len(m["visits"]))

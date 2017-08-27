@@ -5,27 +5,21 @@ import (
 	"time"
 )
 
-var UserDb []*models.User
-var LocationDb []*models.Location
-var VisitDb []*models.Visit
+var UserDb [1200000]*models.User
+var LocationDb [1200000]*models.Location
+var VisitDb [15000000]*models.Visit
 
 var UserCount int64
 var LocationCount int64
 var VisitCount int64
 
-var UserBytesDb [][]byte
-var LocationBytesDb [][]byte
-var VisitBytesDb [][]byte
+var UserBytesDb [1200000][]byte
+var LocationBytesDb [1200000][]byte
+var VisitBytesDb [15000000][]byte
 
 var GenerateTime time.Time
 
 // todo later
 func InitMemoryMap() {
-	UserDb = make([]*models.User, 2000000)
-	LocationDb = make([]*models.Location, 2000000)
-	VisitDb = make([]*models.Visit, 20000000)
 
-	UserBytesDb = make([][]byte, 2000000)
-	LocationBytesDb = make([][]byte, 2000000)
-	VisitBytesDb = make([][]byte, 20000000)
 }
