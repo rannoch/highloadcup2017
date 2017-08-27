@@ -3,12 +3,8 @@ package server
 import (
 	"net"
 	"github.com/valyala/fasthttp"
-	"bufio"
 	"bytes"
 	"strconv"
-	"fmt"
-	"github.com/rannoch/highloadcup2017/tcp_server/logger"
-	"io"
 )
 
 type HlcupCtx struct {
@@ -35,21 +31,17 @@ type HlcupCtx struct {
 	ResponseFullBuffer *bytes.Buffer
 
 	Server *TcpServer
+
+	//Header fasthttp.RequestHeader
 }
 
 func NewCtx(server *TcpServer, connection net.Conn) *HlcupCtx {
-	responseBuffer := server.ResponseBodyBufferPool.Get().(*bytes.Buffer)
-	responseBuffer.Reset()
-
-	responseFullBuffer := server.ResponseFullBufferPool.Get().(*bytes.Buffer)
-	responseFullBuffer.Reset()
-
 	return &HlcupCtx{
 		Connection:         connection,
-		ResponseBodyBuffer: responseBuffer,
-		ResponseFullBuffer: responseFullBuffer,
 		ResponseStatus:     200,
 		Server: server,
+		ResponseBodyBuffer:acquireResponseBodyBuffer(server),
+		ResponseFullBuffer:acquireResponseFullBodyBuffer(server),
 	}
 }
 
@@ -58,53 +50,53 @@ func (hlcupRequest *HlcupCtx) ResetParams() {
 
 	hlcupRequest.ResponseBodyBuffer.Reset()
 	hlcupRequest.ResponseFullBuffer.Reset()
+
 	hlcupRequest.QueryArgs.Reset()
+
+	hlcupRequest.IsPost = false
+	hlcupRequest.IsGet = false
 }
 
 func (hlcupRequest *HlcupCtx) Handle() {
-	//net.TCPConn.SetKeepAlive(true)
+	reader := acquireReader(hlcupRequest)
 
-	//reader := bufio.NewReader(hlcupRequest.Connection)
-
-	reader := hlcupRequest.Server.ReaderPool.Get().(*bufio.Reader)
+	hlcupRequest.ResetParams()
 
 	for {
 		buf := hlcupRequest.Server.BytePool.Get().([]byte)
 
 		reader.Reset(hlcupRequest.Connection)
+
 		n, err := reader.Read(buf)
 
-		hlcupRequest.Server.BytePool.Put(buf)
-
-		//logger.PrintLog(string(buf))
-		//time.Sleep(10 * time.Millisecond)
-		//fmt.Println(hlcupRequest.ConnId)
-
-		if err != nil && err != io.EOF {
-			hlcupRequest.Server.ReaderPool.Put(reader)
-			fmt.Println(err.Error())
-			logger.PrintLog(fmt.Sprintf("%d %s %s", hlcupRequest.ConnId, err.Error(), string(buf)))
-			hlcupRequest.Close()
-			hlcupRequest.Connection = nil
-			return
+		if err != nil {
+			break
 		}
 
-		hlcupRequest.ResetParams()
 		err = hlcupRequest.Parse(buf, n)
+
+		hlcupRequest.Server.BytePool.Put(buf)
+		buf = nil
 
 		hlcupRequest.Server.HandleFunc(hlcupRequest)
 
-		if hlcupRequest.ConnectionClosed {
-			hlcupRequest.Connection = nil
-			hlcupRequest.Server.ReaderPool.Put(reader)
-			return
+		if !hlcupRequest.KeepAlive {
+			break
 		}
+
+		hlcupRequest.ResetParams()
 	}
+
+	hlcupRequest.Close()
+
+	releaseResponseBodyBuffer(hlcupRequest.Server, hlcupRequest.ResponseBodyBuffer)
+	releaseResponseFullBufferPool(hlcupRequest.Server, hlcupRequest.ResponseFullBuffer)
+	releaseReader(hlcupRequest.Server, reader)
+	releaseCtx(hlcupRequest.Server, hlcupRequest)
 }
 
 func (hlcupRequest *HlcupCtx) Parse(body []byte, n int) (err error) {
 	if err != nil {
-		//fmt.Println("Error reading:", err.Error())
 		return
 	}
 
@@ -154,11 +146,12 @@ func (hlcupRequest *HlcupCtx) Parse(body []byte, n int) (err error) {
 
 	// postBody
 	if hlcupRequest.IsPost {
-		postBodyIndex := bytes.LastIndex(body, strCRLF)
+		postBodyIndex := bytes.LastIndex(body, append(strCRLF[:], strCRLF[:]...))
 
-		if postBodyIndex <= 0 {
+		if postBodyIndex <= 0 || postBodyIndex >= n {
 			return
 		}
+
 		hlcupRequest.PostBody = body[postBodyIndex+2:n]
 	}
 
@@ -196,7 +189,7 @@ func (hlcupRequest *HlcupCtx) ParseParams() (params map[string]interface{}) {
 }
 
 func (hlcupRequest *HlcupCtx) SendResponse() {
-	writer := hlcupRequest.Server.WriterPool.Get().(*bufio.Writer)
+	writer := acquireWriter(hlcupRequest)
 	writer.Reset(hlcupRequest.Connection)
 
 	if hlcupRequest.ResponseStatus != 200 {
@@ -209,19 +202,6 @@ func (hlcupRequest *HlcupCtx) SendResponse() {
 			default:
 				hlcupRequest.ResponseFullBuffer.Write(str404KeepAlive)
 			}
-			hlcupRequest.ResponseFullBuffer.Write(strContentLength)
-			hlcupRequest.ResponseFullBuffer.Write(strColonSpace)
-			hlcupRequest.ResponseFullBuffer.Write(strZero)
-			hlcupRequest.ResponseFullBuffer.Write(strCRLF)
-			hlcupRequest.ResponseFullBuffer.Write(strCRLF)
-
-
-			writer.Write(hlcupRequest.ResponseFullBuffer.Bytes())
-			writer.Flush()
-			hlcupRequest.Server.WriterPool.Put(writer)
-
-			//hlcupRequest.Connection.Write(hlcupRequest.ResponseFullBuffer.Bytes())
-			hlcupRequest.Server.ResponseFullBufferPool.Put(hlcupRequest.ResponseFullBuffer)
 		} else {
 			switch hlcupRequest.ResponseStatus {
 			case 404:
@@ -231,22 +211,17 @@ func (hlcupRequest *HlcupCtx) SendResponse() {
 			default:
 				hlcupRequest.ResponseFullBuffer.Write(str404Closed)
 			}
-
-			hlcupRequest.ResponseFullBuffer.Write(strContentLength)
-			hlcupRequest.ResponseFullBuffer.Write(strColonSpace)
-			hlcupRequest.ResponseFullBuffer.Write(strZero)
-			hlcupRequest.ResponseFullBuffer.Write(strCRLF)
-			hlcupRequest.ResponseFullBuffer.Write(strCRLF)
-
-
-			writer.Write(hlcupRequest.ResponseFullBuffer.Bytes())
-			writer.Flush()
-			hlcupRequest.Server.WriterPool.Put(writer)
-
-			hlcupRequest.Server.ResponseFullBufferPool.Put(hlcupRequest.ResponseFullBuffer)
-
-			hlcupRequest.Close()
 		}
+
+		hlcupRequest.ResponseFullBuffer.Write(strContentLength)
+		hlcupRequest.ResponseFullBuffer.Write(strColonSpace)
+		hlcupRequest.ResponseFullBuffer.Write(strZero)
+		hlcupRequest.ResponseFullBuffer.Write(strCRLF)
+		hlcupRequest.ResponseFullBuffer.Write(strCRLF)
+
+		writer.Write(hlcupRequest.ResponseFullBuffer.Bytes())
+		writer.Flush()
+		releaseWriter(hlcupRequest.Server, writer)
 
 		return
 	}
@@ -266,17 +241,9 @@ func (hlcupRequest *HlcupCtx) SendResponse() {
 
 	hlcupRequest.ResponseFullBuffer.Write(hlcupRequest.ResponseBodyBuffer.Bytes())
 
-	hlcupRequest.Server.ResponseBodyBufferPool.Put(hlcupRequest.ResponseBodyBuffer)
-
 	writer.Write(hlcupRequest.ResponseFullBuffer.Bytes())
 	writer.Flush()
-	hlcupRequest.Server.WriterPool.Put(writer)
 
-	//logger.PrintLog(fmt.Sprintf("- %d - %s", hlcupRequest.ConnId, hlcupRequest.ResponseFullBuffer.String()))
-
-	hlcupRequest.Server.ResponseFullBufferPool.Put(hlcupRequest.ResponseFullBuffer)
-
-	if !hlcupRequest.KeepAlive {
-		hlcupRequest.Close()
-	}
+	//fmt.Println(hlcupRequest.ResponseFullBuffer.String())
+	releaseWriter(hlcupRequest.Server, writer)
 }
