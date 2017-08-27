@@ -72,12 +72,12 @@ var (
 	strTextSlash           = []byte("text/")
 	strApplicationSlash    = []byte("application/")
 
-	str400KeepAlive = []byte("HTTP/1.1 400 OK\r\ncontent-type:application/json;charset=utf-8\r\nConnection: Keep-Alive\r\n")
-	str400Closed    = []byte("HTTP/1.1 400 OK\r\ncontent-type:application/json;charset=utf-8\r\nConnection: Closed\r\n")
+	str400KeepAlive = []byte("HTTP/1.1 400 OK\r\ncontent-type: application/json;charset=utf-8\r\nConnection: Keep-Alive\r\n")
+	str400Closed    = []byte("HTTP/1.1 400 OK\r\ncontent-type: application/json;charset=utf-8\r\nConnection: Closed\r\n")
 
-	str404KeepAlive = []byte("HTTP/1.1 404 OK\r\ncontent-type:application/json;charset=utf-8\r\nConnection: Keep-Alive\r\n")
-	str404Closed    = []byte("HTTP/1.1 404 OK\r\ncontent-type:application/json;charset=utf-8\r\nConnection: Closed\r\n")
+	str404KeepAlive = []byte("HTTP/1.1 404 OK\r\ncontent-type: application/json;charset=utf-8\r\nConnection: Keep-Alive\r\n")
+	str404Closed    = []byte("HTTP/1.1 404 OK\r\ncontent-type: application/json;charset=utf-8\r\nConnection: Closed\r\n")
 
-	str200KeepAlive = []byte("HTTP/1.1 200 OK\r\ncontent-type:application/json;charset=utf-8\r\nConnection: Keep-Alive\r\n")
-	str200Closed    = []byte("HTTP/1.1 200 OK\r\ncontent-type:application/json;charset=utf-8\r\nConnection: Closed")
+	str200KeepAlive = []byte("HTTP/1.1 200 OK\r\ncontent-type: application/json;charset=utf-8\r\nConnection: Keep-Alive\r\n")
+	str200Closed    = []byte("HTTP/1.1 200 OK\r\ncontent-type: application/json;charset=utf-8\r\nConnection: Closed")
 )
