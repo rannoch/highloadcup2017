@@ -7,12 +7,32 @@ import (
 )
 
 type Location struct {
-	Id       int64 `json:"id"`
-	Place    string `json:"place"`
-	Country  string `json:"country"`
-	City     string `json:"city"`
-	Distance int64 `json:"distance"`
-	Visits   []*Visit `json:"-"`
+	Id       int64
+	Place    []byte
+	Country  []byte
+	City     []byte
+	Distance int64
+	Visits   []*Visit
+}
+
+type LocationHelper struct {
+	Id       int64
+	Place    string
+	Country  string
+	City     string
+	Distance int64
+	Visits   []*Visit
+}
+
+func (locationHelper LocationHelper) GetLocation() Location {
+	return Location{
+		Id:locationHelper.Id,
+		Place: []byte(locationHelper.Place),
+		Country: []byte(locationHelper.Country),
+		City: []byte(locationHelper.City),
+		Distance:locationHelper.Distance,
+		Visits:locationHelper.Visits,
+	}
 }
 
 func (location *Location) GetFields(alias string) []string {
@@ -57,13 +77,13 @@ func (location *Location) SetParams(params map[string]interface{}) {
 		}
 	}
 	place, ok := params["place"]; if ok {
-		location.Place = place.(string)
+		location.Place = []byte(place.(string))
 	}
 	country, ok := params["country"]; if ok {
-		location.Country = country.(string)
+		location.Country = []byte(country.(string))
 	}
 	city, ok := params["city"]; if ok {
-		location.City = city.(string)
+		location.City = []byte(city.(string))
 	}
 	distance, ok := params["distance"]; if ok {
 		switch distance.(type) {

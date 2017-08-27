@@ -55,6 +55,9 @@ func (hlcupRequest *HlcupCtx) ResetParams() {
 
 	hlcupRequest.IsPost = false
 	hlcupRequest.IsGet = false
+
+	hlcupRequest.HasUrlParams = false
+	hlcupRequest.UrlParams = hlcupRequest.UrlParams[:0]
 }
 
 func (hlcupRequest *HlcupCtx) Handle() {
@@ -63,20 +66,20 @@ func (hlcupRequest *HlcupCtx) Handle() {
 	hlcupRequest.ResetParams()
 
 	for {
-		buf := hlcupRequest.Server.BytePool.Get().([]byte)
+		buf := acquireBytes(hlcupRequest.Server)
 
 		reader.Reset(hlcupRequest.Connection)
 
 		n, err := reader.Read(buf)
 
 		if err != nil {
+			releaseBytes(hlcupRequest.Server, buf)
 			break
 		}
 
 		err = hlcupRequest.Parse(buf, n)
 
-		hlcupRequest.Server.BytePool.Put(buf)
-		buf = nil
+		releaseBytes(hlcupRequest.Server, buf)
 
 		hlcupRequest.Server.HandleFunc(hlcupRequest)
 

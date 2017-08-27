@@ -7,13 +7,13 @@ import (
 )
 
 type User struct {
-	Id         int64 `json:"id"`
-	Email      string `json:"email"`
-	First_name string `json:"first_name"`
-	Last_name  string `json:"last_name"`
-	Gender     string `json:"gender"`
-	Birth_date int64 `json:"birth_date"`
-	Visits     []*Visit `json:"-"`
+	Id         int64
+	Email      []byte
+	First_name []byte
+	Last_name  []byte
+	Gender     []byte
+	Birth_date int64
+	Visits     []*Visit
 }
 
 func (user *User) GetFields(alias string) []string {
@@ -58,16 +58,16 @@ func (user *User) SetParams(params map[string]interface{}) {
 		}
 	}
 	email, ok := params["email"]; if ok {
-		user.Email = email.(string)
+		user.Email = []byte(email.(string))
 	}
 	first_name, ok := params["first_name"]; if ok {
-		user.First_name = first_name.(string)
+		user.First_name = []byte(first_name.(string))
 	}
 	last_name, ok := params["last_name"]; if ok {
-		user.Last_name = last_name.(string)
+		user.Last_name = []byte(last_name.(string))
 	}
 	gender, ok := params["gender"]; if ok {
-		user.Gender = gender.(string)
+		user.Gender = []byte(gender.(string))
 	}
 	birth_date, ok := params["birth_date"]; if ok {
 		switch birth_date.(type) {

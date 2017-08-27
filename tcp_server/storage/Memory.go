@@ -1,6 +1,9 @@
 package storage
 
-import "github.com/rannoch/highloadcup2017/tcp_server/models"
+import (
+	"github.com/rannoch/highloadcup2017/tcp_server/models"
+	"time"
+)
 
 var UserDb []*models.User
 var LocationDb []*models.Location
@@ -13,6 +16,8 @@ var VisitCount int64
 var UserBytesDb [][]byte
 var LocationBytesDb [][]byte
 var VisitBytesDb [][]byte
+
+var GenerateTime time.Time
 
 // todo later
 func InitMemoryMap() {

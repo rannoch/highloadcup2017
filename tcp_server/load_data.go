@@ -10,6 +10,8 @@ import (
 	"time"
 	"sync"
 	"sort"
+	"github.com/antonholmquist/jason"
+	"strconv"
 )
 
 func LoadData(path string) (err error) {
@@ -62,23 +64,53 @@ func parseAndAppendFile(file string) () {
 	}
 
 	switch {
-	case strings.Contains(file, "users"):
-		var m = make(map[string][]models.User)
-		err = json.Unmarshal(fileContent, &m)
+	case strings.Contains(file, "options"):
+		optionsStr := string(fileContent)
+
+		generateTime, err := strconv.ParseInt(strings.Split(optionsStr, "\n")[0], 0, 64)
 
 		if err != nil {
+			fmt.Println(err.Error())
+			storage.GenerateTime = time.Now()
+			break
+		}
+
+		storage.GenerateTime = time.Unix(generateTime, 0)
+	case strings.Contains(file, "users"):
+		v, err := jason.NewObjectFromBytes(fileContent)
+
+		if err != nil {
+			fmt.Println(err.Error())
 			return
 		}
-		for _, v := range m["users"] {
-			c := v
 
-			storage.UserDb[v.Id] = &c
-			storage.UserBytesDb[v.Id] = c.GetBytes()
+		users, err := v.GetObjectArray("users")
+
+		if err != nil {
+			fmt.Println(err.Error())
+			return
 		}
-		storage.UserCount += int64(len(m["users"]))
+		for _, object := range users {
+			email, _ := object.GetString("email")
+			first_name, _ := object.GetString("first_name")
+			last_name, _ := object.GetString("last_name")
+			gender, _ := object.GetString("gender")
+
+			c := models.User{}
+			c.Id, _ = object.GetInt64("id")
+			c.Email = []byte(email)
+			c.First_name = []byte(first_name)
+			c.Last_name = []byte(last_name)
+			c.Gender = []byte(gender)
+			c.Birth_date, _ = object.GetInt64("birth_date")
+
+			storage.UserDb[c.Id] = &c
+			storage.UserBytesDb[c.Id] = c.GetBytes()
+		}
+		storage.UserCount += int64(len(users))
 
 	case strings.Contains(file, "locations"):
-		var m = make(map[string][]models.Location)
+		var m = make(map[string][]models.LocationHelper)
 		err = json.Unmarshal(fileContent, &m)
 
 		if err != nil {
@@ -86,7 +118,7 @@ func parseAndAppendFile(file string) () {
 		}
 
 		for _, v := range m["locations"] {
-			c := v
+			c := v.GetLocation()
 
 			storage.LocationDb[v.Id] = &c
 			storage.LocationBytesDb[v.Id] = c.GetBytes()

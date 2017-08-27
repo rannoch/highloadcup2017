@@ -29,33 +29,6 @@ func New(port string) *TcpServer {
 		Port: port,
 	}
 
-	tcp_server.ResponseBodyBufferPool = sync.Pool{
-		New: func() interface{} {
-			// The Pool's New function should generally only return pointer
-			// types, since a pointer can be put into the return interface
-			// value without an allocation:
-			return new(bytes.Buffer)
-		},
-	}
-
-	tcp_server.ResponseFullBufferPool = sync.Pool{
-		New: func() interface{} {
-			// The Pool's New function should generally only return pointer
-			// types, since a pointer can be put into the return interface
-			// value without an allocation:
-			return new(bytes.Buffer)
-		},
-	}
-
-	tcp_server.BytePool = sync.Pool{
-		New: func() interface{} {
-			// The Pool's New function should generally only return pointer
-			// types, since a pointer can be put into the return interface
-			// value without an allocation:
-			return make([]byte, 1024)
-		},
-	}
-
 	return tcp_server
 }
 
@@ -161,4 +134,18 @@ func acquireResponseFullBodyBuffer(s *TcpServer) *bytes.Buffer {
 
 func releaseResponseFullBufferPool(s *TcpServer, b *bytes.Buffer) {
 	s.ResponseFullBufferPool.Put(b)
+}
+
+func acquireBytes(s *TcpServer) []byte {
+	v := s.BytePool.Get()
+
+	if v == nil {
+		return make([]byte, 1024)
+	}
+
+	return v.([]byte)
+}
+
+func releaseBytes(s *TcpServer, b []byte) {
+	s.BytePool.Put(b)
 }

@@ -60,7 +60,7 @@ func UsersVisitsHandler(ctx *server.HlcupCtx, id int64) {
 
 	//logger.PrintLog(fmt.Sprintf("%d %d %d", fromDate, toDate, toDistance))
 
-	var country = (string)(ctx.QueryArgs.Peek("country"))
+	var country = ctx.QueryArgs.Peek("country")
 
 	var buffer bytes.Buffer
 
@@ -74,7 +74,7 @@ func UsersVisitsHandler(ctx *server.HlcupCtx, id int64) {
 		if toDate > 0 && visit.Visited_at > int64(toDate) {
 			continue
 		}
-		if len(country) > 0 && visit.Location_model.Country != country {
+		if len(country) > 0 && !bytes.Equal(visit.Location_model.Country, country)  {
 			continue
 		}
 

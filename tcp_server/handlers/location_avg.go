@@ -3,9 +3,14 @@ package handlers
 import (
 	"github.com/valyala/fasthttp"
 	"github.com/rannoch/highloadcup2017/tcp_server/storage"
-	"time"
 	"fmt"
 	"github.com/rannoch/highloadcup2017/tcp_server/server"
+	"bytes"
+)
+
+var (
+	strM = []byte("m")
+	strF = []byte("f")
 )
 
 func LocationsAvgHandler(ctx *server.HlcupCtx, id int64) {
@@ -23,7 +28,7 @@ func LocationsAvgHandler(ctx *server.HlcupCtx, id int64) {
 	}
 
 	var fromDate, toDate, fromAge, toAge int
-	var gender string
+	var gender []byte
 
 	if ctx.HasUrlParams {
 		ctx.ParseParams()
@@ -61,9 +66,9 @@ func LocationsAvgHandler(ctx *server.HlcupCtx, id int64) {
 			}
 		}
 
-		gender = (string)(ctx.QueryArgs.Peek("gender"))
+		gender = ctx.QueryArgs.Peek("gender")
 
-		if gender != "" && !(gender == "m" || gender == "f") {
+		if len(gender) > 0 && !(bytes.Equal(strM, gender) || bytes.Equal(strF, gender)) {
 			ctx.Error(fasthttp.StatusBadRequest)
 			return
 		}
@@ -82,13 +87,13 @@ func LocationsAvgHandler(ctx *server.HlcupCtx, id int64) {
 		if toDate > 0 && visit.Visited_at >= int64(toDate) {
 			continue
 		}
-		if fromAge > 0 && visit.User_model.Birth_date >= time.Now().AddDate(-fromAge, 0, 0).Unix() {
+		if fromAge > 0 && visit.User_model.Birth_date >= storage.GenerateTime.AddDate(-fromAge, 0, 0).Unix() {
 			continue
 		}
-		if toAge > 0 && visit.User_model.Birth_date <= time.Now().AddDate(-toAge, 0, 0).Unix() {
+		if toAge > 0 && visit.User_model.Birth_date <= storage.GenerateTime.AddDate(-toAge, 0, 0).Unix() {
 			continue
 		}
-		if len(gender) > 0 && visit.User_model.Gender != gender {
+		if len(gender) > 0 && !bytes.Equal(visit.User_model.Gender, gender) {
 			continue
 		}
 

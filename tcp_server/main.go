@@ -13,6 +13,8 @@ import (
 	"github.com/rannoch/highloadcup2017/tcp_server/handlers"
 )
 
+var strSlash = []byte("/")
+
 func main() {
 	if len(os.Args) < 3 {
 		log.Fatal("not enough args")
@@ -28,7 +30,6 @@ func main() {
 
 	tcpServer.Listen()
 }
-
 
 func HandleFunc(hlcupCtx *server.HlcupCtx) (err error) {
 	path := hlcupCtx.Url
@@ -49,7 +50,7 @@ func HandleFunc(hlcupCtx *server.HlcupCtx) (err error) {
 			return
 		}
 
-		params := bytes.Split(path, []byte("/"))
+		params := bytes.Split(path, strSlash)
 		if len(params) != 2 {
 			hlcupCtx.Error(400)
 			hlcupCtx.SendResponse()
@@ -67,7 +68,7 @@ func HandleFunc(hlcupCtx *server.HlcupCtx) (err error) {
 
 		id, err := strconv.Atoi(string(idValue[:]))
 
-		if err != nil || id < 0{
+		if err != nil || id < 0 {
 			hlcupCtx.Error(fasthttp.StatusNotFound)
 			hlcupCtx.SendResponse()
 			return err
@@ -97,7 +98,7 @@ func HandleFunc(hlcupCtx *server.HlcupCtx) (err error) {
 		}
 
 		id, err := strconv.Atoi(string(idValue[:]))
-		if err != nil || id < 0{
+		if err != nil || id < 0 {
 			hlcupCtx.Error(fasthttp.StatusNotFound)
 			hlcupCtx.SendResponse()
 			return err
@@ -130,5 +131,3 @@ func HandleFunc(hlcupCtx *server.HlcupCtx) (err error) {
 
 	return
 }
-
-
