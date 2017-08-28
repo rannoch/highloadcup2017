@@ -35,6 +35,12 @@ func New(port string) *TcpServer {
 func (server *TcpServer) Listen() {
 	fmt.Println("Launching server...")
 
+	workerPool := WorkerPool{
+		JobChan:make(chan net.Conn),
+		WorkerFunc:server.ServeConn,
+	}
+	workerPool.Start()
+
 	listener, err := net.Listen("tcp4", ":"+server.Port)
 	if err != nil {
 		fmt.Println(err)
@@ -43,26 +49,23 @@ func (server *TcpServer) Listen() {
 
 	defer listener.Close()
 
-	var connId int64
-
 	for {
 		connection, err := listener.Accept()
 
-		connId++
-
 		if err != nil {
-			fmt.Println(err.Error())
 			connection.Close()
 			continue
 		}
 
-		go func() {
-			hlcupCtx := acquireCtx(server, connection)
-			hlcupCtx.ConnId = connId
-
-			hlcupCtx.Handle()
-		}()
+		workerPool.Serve(connection)
 	}
+}
+
+func (server *TcpServer) ServeConn(c net.Conn) {
+	hlcupCtx := acquireCtx(server, c)
+	//hlcupCtx.ConnId = connId
+
+	hlcupCtx.Handle()
 }
 
 func acquireReader(ctx *HlcupCtx) *bufio.Reader {
