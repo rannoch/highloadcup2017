@@ -46,7 +46,9 @@ func NewCtx(server *TcpServer, connection net.Conn) *HlcupCtx {
 }
 
 func (hlcupRequest *HlcupCtx) ResetParams() {
+	hlcupRequest.Method = hlcupRequest.Method[:0]
 	hlcupRequest.ResponseStatus = 200
+	hlcupRequest.KeepAlive = false
 
 	hlcupRequest.ResponseBodyBuffer.Reset()
 	hlcupRequest.ResponseFullBuffer.Reset()
@@ -58,6 +60,7 @@ func (hlcupRequest *HlcupCtx) ResetParams() {
 
 	hlcupRequest.HasUrlParams = false
 	hlcupRequest.UrlParams = hlcupRequest.UrlParams[:0]
+	hlcupRequest.Url = hlcupRequest.Url[:0]
 
 	hlcupRequest.PostBody = hlcupRequest.PostBody[:0]
 	hlcupRequest.HasPostBody = false
