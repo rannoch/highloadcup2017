@@ -39,9 +39,9 @@ func NewCtx(server *TcpServer, connection net.Conn) *HlcupCtx {
 	return &HlcupCtx{
 		Connection:         connection,
 		ResponseStatus:     200,
-		Server: server,
-		ResponseBodyBuffer:acquireResponseBodyBuffer(server),
-		ResponseFullBuffer:acquireResponseFullBodyBuffer(server),
+		Server:             server,
+		ResponseBodyBuffer: acquireResponseBodyBuffer(server),
+		ResponseFullBuffer: acquireResponseFullBodyBuffer(server),
 	}
 }
 

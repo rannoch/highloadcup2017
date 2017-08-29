@@ -35,12 +35,12 @@ func New(port string) *TcpServer {
 func (server *TcpServer) Listen() {
 	fmt.Println("Launching server...")
 
-	workerPool := WorkerPool{
+	/*workerPool := WorkerPool{
 		JobChan:make(chan net.Conn),
 		WorkerFunc:server.ServeConn,
 	}
 	workerPool.Start()
-
+*/
 	listener, err := net.Listen("tcp4", ":"+server.Port)
 	if err != nil {
 		fmt.Println(err)
@@ -57,7 +57,7 @@ func (server *TcpServer) Listen() {
 			continue
 		}
 
-		workerPool.Serve(connection)
+		go server.ServeConn(connection)
 	}
 }
 

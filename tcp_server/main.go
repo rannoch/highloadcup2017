@@ -72,7 +72,8 @@ func HandleFunc(hlcupCtx *server.HlcupCtx) (err error) {
 			return
 		}
 
-		id, err := strconv.Atoi(string(idValue[:]))
+		//id, err := strconv.Atoi(string(idValue[:]))
+		id, err := strconv.ParseInt(string(idValue[:]), 10, 0)
 
 		if err != nil || id < 0 {
 			hlcupCtx.Error(fasthttp.StatusNotFound)
@@ -81,13 +82,13 @@ func HandleFunc(hlcupCtx *server.HlcupCtx) (err error) {
 		}
 
 		//POST /<entity>/<id> на обновление
-		handlers.EntityUpdateHandler(hlcupCtx, int64(id), entity)
+		handlers.EntityUpdateHandler(hlcupCtx, id, entity)
 		hlcupCtx.SendResponse()
 		return err
 	}
 
 	if hlcupCtx.IsGet {
-		params := bytes.Split(path, []byte("/"))
+		params := bytes.Split(path, strSlash)
 		if len(params) < 2 || len(params) > 3 {
 			hlcupCtx.Error(fasthttp.StatusBadRequest)
 			hlcupCtx.SendResponse()
@@ -103,7 +104,7 @@ func HandleFunc(hlcupCtx *server.HlcupCtx) (err error) {
 			return
 		}
 
-		id, err := strconv.Atoi(string(idValue[:]))
+		id, err := strconv.ParseInt(string(idValue[:]), 10, 0)
 		if err != nil || id < 0 {
 			hlcupCtx.Error(fasthttp.StatusNotFound)
 			hlcupCtx.SendResponse()
@@ -112,12 +113,12 @@ func HandleFunc(hlcupCtx *server.HlcupCtx) (err error) {
 
 		if len(params) == 3 {
 			if bytes.Equal(entity, handlers.UsersBytes) && bytes.Equal(params[2], handlers.VisitsBytes) {
-				handlers.UsersVisitsHandler(hlcupCtx, int64(id))
+				handlers.UsersVisitsHandler(hlcupCtx, id)
 				hlcupCtx.SendResponse()
 				return err
 			}
 			if bytes.Equal(entity, handlers.LocationsBytes) && bytes.Equal(params[2], handlers.AvgBytes) {
-				handlers.LocationsAvgHandler(hlcupCtx, int64(id))
+				handlers.LocationsAvgHandler(hlcupCtx, id)
 				hlcupCtx.SendResponse()
 				return err
 			}
@@ -127,7 +128,7 @@ func HandleFunc(hlcupCtx *server.HlcupCtx) (err error) {
 			return err
 		}
 
-		handlers.EntitySelectHandler(hlcupCtx, int64(id), entity)
+		handlers.EntitySelectHandler(hlcupCtx, id, entity)
 		hlcupCtx.SendResponse()
 		return err
 	}
