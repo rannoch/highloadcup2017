@@ -102,7 +102,7 @@ func LocationsAvgHandler(ctx *server.HlcupCtx, id int64) {
 	}
 
 	if markCount > 0 {
-		avg = float64(marksSum) / float64(markCount)
+		avg = float64(marksSum) / float64(markCount) + 0.00000001
 	}
 
 	ctx.WriteString(fmt.Sprintf("{\"avg\" : %.5f}", avg))
