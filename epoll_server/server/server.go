@@ -64,7 +64,7 @@ func (server *Epoll_server) Listen() {
 		fmt.Println(err.Error())
 		return
 	}
-	err = syscall.Listen(socket, 500)
+	err = syscall.Listen(socket, 1000)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -89,7 +89,6 @@ func (server *Epoll_server) Listen() {
 	for {
 		num_events, e := syscall.EpollWait(epoll, events[:], -1)
 		if e != nil {
-			fmt.Println("epoll_wait: ", e)
 			continue
 		}
 
@@ -97,7 +96,6 @@ func (server *Epoll_server) Listen() {
 			if int(events[ev].Fd) == socket {
 				connFd, _, err := syscall.Accept(socket)
 				if err != nil {
-					//fmt.Println("accept: ", err)
 					continue
 				}
 				syscall.SetNonblock(socket, true)
