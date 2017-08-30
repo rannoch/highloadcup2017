@@ -11,9 +11,14 @@ import (
 	"bytes"
 	"strconv"
 	"github.com/rannoch/highloadcup2017/epoll_server/handlers"
+	"flag"
+	"runtime/pprof"
+	"time"
 )
 
 var strSlash = []byte("/")
+
+var cpuprofile = flag.String("cpuprofile", "/home/baska/projects/go/src/github.com/rannoch/highloadcup2017/epoll_server/memory.prof", "write cpu profile to file")
 
 func main() {
 	if len(os.Args) < 3 {
@@ -29,6 +34,26 @@ func main() {
 
 	epoll_server := server.New(port)
 	epoll_server.HandleFunc = HandleFunc
+
+	if false && *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		pprof.StartCPUProfile(f)
+
+		go func() {
+			select {
+			case <-time.After(20 * time.Second):
+				pprof.StopCPUProfile()
+				f.Close()
+			}
+		}()
+		//defer f.Close()
+		//defer pprof.StopCPUProfile()
+	}
+
 
 	epoll_server.Listen()
 }

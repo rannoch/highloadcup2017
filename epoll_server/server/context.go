@@ -69,30 +69,28 @@ func (hlcupRequest *HlcupCtx) ResetParams() {
 func (hlcupRequest *HlcupCtx) Handle() {
 	hlcupRequest.ResetParams()
 
-	for {
-		buf := acquireBytes(hlcupRequest.Server)
+	buf := acquireBytes(hlcupRequest.Server)
 
-		n, err := syscall.Read(int(hlcupRequest.Fd), buf[:])
+	n, err := syscall.Read(int(hlcupRequest.Fd), buf[:])
 
-		if err != nil {
-			releaseBytes(hlcupRequest.Server, buf)
-			break
-		}
-
-		err = hlcupRequest.Parse(buf, n)
-
+	if err != nil {
 		releaseBytes(hlcupRequest.Server, buf)
 
-		hlcupRequest.Server.HandleFunc(hlcupRequest)
-
-		if !hlcupRequest.KeepAlive {
-			break
-		}
-
-		hlcupRequest.ResetParams()
+		releaseResponseBodyBuffer(hlcupRequest.Server, hlcupRequest.ResponseBodyBuffer)
+		releaseResponseFullBufferPool(hlcupRequest.Server, hlcupRequest.ResponseFullBuffer)
+		releaseCtx(hlcupRequest.Server, hlcupRequest)
+		return
 	}
 
-	hlcupRequest.Close()
+	err = hlcupRequest.Parse(buf, n)
+
+	releaseBytes(hlcupRequest.Server, buf)
+
+	hlcupRequest.Server.HandleFunc(hlcupRequest)
+
+	if !hlcupRequest.KeepAlive {
+		hlcupRequest.Close()
+	}
 
 	releaseResponseBodyBuffer(hlcupRequest.Server, hlcupRequest.ResponseBodyBuffer)
 	releaseResponseFullBufferPool(hlcupRequest.Server, hlcupRequest.ResponseFullBuffer)

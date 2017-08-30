@@ -64,7 +64,7 @@ func (server *Epoll_server) Listen() {
 		fmt.Println(err.Error())
 		return
 	}
-	err = syscall.Listen(socket, 1000)
+	err = syscall.Listen(socket, 500)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -90,14 +90,14 @@ func (server *Epoll_server) Listen() {
 		num_events, e := syscall.EpollWait(epoll, events[:], -1)
 		if e != nil {
 			fmt.Println("epoll_wait: ", e)
-			break
+			continue
 		}
 
 		for ev := 0; ev < num_events; ev++ {
 			if int(events[ev].Fd) == socket {
 				connFd, _, err := syscall.Accept(socket)
 				if err != nil {
-					fmt.Println("accept: ", err)
+					//fmt.Println("accept: ", err)
 					continue
 				}
 				syscall.SetNonblock(socket, true)
@@ -108,26 +108,8 @@ func (server *Epoll_server) Listen() {
 					os.Exit(1)
 				}
 			} else {
-				//go echo(int(server.Events[ev].Fd))
-
-				go server.ServeConn(events[ev].Fd)
+				server.ServeConn(events[ev].Fd)
 			}
-		}
-	}
-}
-
-func echo(socket int) {
-	defer syscall.Close(socket)
-	var buf [32 * 1024]byte
-	for {
-		nbytes, e := syscall.Read(socket, buf[:])
-		if nbytes > 0 {
-			fmt.Printf(">>> %s", buf)
-			syscall.Write(socket, buf[:nbytes])
-			fmt.Printf("<<< %s", buf)
-		}
-		if e != nil {
-			break
 		}
 	}
 }
