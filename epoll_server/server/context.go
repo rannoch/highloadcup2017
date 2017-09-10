@@ -178,7 +178,7 @@ func (hlcupRequest *HlcupCtx) WriteString(s string) {
 
 func (hlcupRequest *HlcupCtx) Close() {
 	hlcupRequest.ConnectionClosed = true
-
+	syscall.Close(int(hlcupRequest.Fd))
 	//hlcupRequest.Fd.Close()
 }
 

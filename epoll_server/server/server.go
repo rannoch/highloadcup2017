@@ -86,8 +86,36 @@ func (server *Epoll_server) Listen() {
 		os.Exit(1)
 	}
 
+	/*for i := 0 ; i < 2; i++ {
+		go func() {
+			for {
+				num_events, e := syscall.EpollWait(epoll, events[:], 0)
+				if e != nil {
+					continue
+				}
+
+				for ev := 0; ev < num_events; ev++ {
+					if int(events[ev].Fd) == socket {
+						connFd, _, err := syscall.Accept(socket)
+						if err != nil {
+							continue
+						}
+						syscall.SetNonblock(socket, true)
+						event.Events = syscall.EPOLLIN | EPOLLET
+						event.Fd = int32(connFd)
+						if err := syscall.EpollCtl(epoll, syscall.EPOLL_CTL_ADD, connFd, &event); err != nil {
+							fmt.Print("epoll_ctl: ", connFd, err)
+							os.Exit(1)
+						}
+					} else {
+						server.ServeConn(events[ev].Fd)
+					}
+				}
+			}
+		}()
+	}*/
 	for {
-		num_events, e := syscall.EpollWait(epoll, events[:], -1)
+		num_events, e := syscall.EpollWait(epoll, events[:], 0)
 		if e != nil {
 			continue
 		}
