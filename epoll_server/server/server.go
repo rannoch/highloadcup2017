@@ -11,7 +11,7 @@ import (
 
 const (
 	EPOLLET        = 1 << 31
-	MaxEpollEvents = 32
+	MaxEpollEvents = 2048
 )
 
 type Epoll_server struct {
@@ -114,13 +114,14 @@ func (server *Epoll_server) Listen() {
 			}
 		}()
 	}*/
+	var num_events, ev int
 	for {
-		num_events, e := syscall.EpollWait(epoll, events[:], 0)
+		num_events, e = syscall.EpollWait(epoll, events[:], 0)
 		if e != nil {
 			continue
 		}
 
-		for ev := 0; ev < num_events; ev++ {
+		for ev = 0; ev < num_events; ev++ {
 			if int(events[ev].Fd) == socket {
 				connFd, _, err := syscall.Accept(socket)
 				if err != nil {

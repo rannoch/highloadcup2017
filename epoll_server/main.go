@@ -40,14 +40,14 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		pprof.WriteHeapProfile(f)
+		//pprof.WriteHeapProfile(f)
 
-		//pprof.StartCPUProfile(f)
+		pprof.StartCPUProfile(f)
 
 		go func() {
 			select {
 			case <-time.After(20 * time.Second):
-				//pprof.StopCPUProfile()
+				pprof.StopCPUProfile()
 				f.Close()
 			}
 		}()
